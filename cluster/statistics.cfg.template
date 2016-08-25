@@ -1,0 +1,6 @@
+#!/bin/bash
+
+NAME="clustername" 
+SGE_settings="/usr/local/programs/sge/sge/${NAME}/common/settings.sh"
+ssh_key="/home/myuser/.ssh/mykey"
+ssh_target="myuser@remotehost.com:/var/www/myweb.com/statistics/"
