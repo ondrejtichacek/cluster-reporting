@@ -51,3 +51,7 @@ Temporary Items
 *-qstat.txt
 *.log
 *.cfg
+*.ini
+*.history
+
+__pycache__
