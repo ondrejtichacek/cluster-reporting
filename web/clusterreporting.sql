@@ -38,7 +38,7 @@ CREATE TABLE `filesystem` (
   `size` bigint(20) DEFAULT NULL,
   `mounted` varchar(64) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `cluster_id` (`cluster_id`),
+  UNIQUE KEY `cluster_id_path` (`cluster_id`,`path`),
   KEY `path` (`path`),
   CONSTRAINT `filesystem_ibfk_2` FOREIGN KEY (`cluster_id`) REFERENCES `cluster` (`id`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -113,4 +113,4 @@ CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `fs` AS (select `c`.`name` 
 DROP TABLE IF EXISTS `q`;
 CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `q` AS (select `c`.`name` AS `system`,`c`.`display_name` AS `system_name`,`b`.`name` AS `queue`,`b`.`display_name` AS `queue_name`,`b`.`cpu` AS `cpu`,`b`.`ram` AS `ram`,`b`.`scratch` AS `scratch`,`b`.`gpu` AS `gpu`,`a`.`cqload` AS `cqload`,`a`.`used` AS `used`,`a`.`res` AS `res`,`a`.`avail` AS `avail`,`a`.`total` AS `total`,`a`.`aoacds` AS `aoacds`,`a`.`cdsue` AS `cdsue`,`a`.`recorded` AS `recorded` from ((`q_occupancy` `a` join `queue` `b` on((`a`.`queue_id` = `b`.`id`))) join `cluster` `c` on((`b`.`cluster_id` = `c`.`id`))));
 
--- 2016-09-24 21:48:15
+-- 2016-09-24 22:50:14
