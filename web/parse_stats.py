@@ -62,6 +62,9 @@ def insert_record(query):
 
         conn.commit()
     except Error as e:
+        
+        print(query)
+        
         print('Error:', e)
         raise(e)
 
@@ -99,14 +102,15 @@ def main():
             try:
                 insert_record(query)
             except Error as e:
-                print('Exception:', e)
-                r = {k: record[k] for k in record.keys() & {'cluster', 'filesystem'}};
-                q = """INSERT INTO filesystem (cluster_id, path, size, mounted)
-                    VALUES ((
-                        SELECT id FROM cluster WHERE name = '{cluster}'),
-                        '{filesystem}', NULL, NULL);""".format(**r)
-                insert_record(q)
-                insert_record(query)
+                if e.errno == 1048: # Column 'filesystem_id' cannot be null
+                    print('Error 1048 detected, trying to repair by inserting required missing rows')
+                    r = {k: record[k] for k in record.keys() & {'cluster', 'filesystem'}};
+                    q = """INSERT INTO filesystem (cluster_id, path, size, mounted)
+                        VALUES ((
+                            SELECT id FROM cluster WHERE name = '{cluster}'),
+                            '{filesystem}', NULL, NULL);""".format(**r)
+                    insert_record(q)
+                    insert_record(query)
 
         f = '{}-qstat.txt'.format(cluster)
         mtime = os.path.getmtime(f)
@@ -129,14 +133,15 @@ def main():
             try:
                 insert_record(query)
             except Error as e:
-                print('Exception:', e)
-                r = {k: record[k] for k in record.keys() & {'cluster', 'queue'}};
-                q = """INSERT INTO queue (cluster_id, name, display_name, cpu, ram, scratch, gpu)
-                    VALUES ((
-                        SELECT id FROM cluster WHERE name = '{cluster}'),
-                        '{queue}', '{queue}', NULL, NULL, NULL, NULL);""".format(**r)
-                insert_record(q)
-                insert_record(query)
+                if e.errno == 1048: # Column 'queue_id' cannot be null
+                    print('Error 1048 detected, trying to repair by inserting required missing rows')
+                    r = {k: record[k] for k in record.keys() & {'cluster', 'queue'}};
+                    q = """INSERT INTO queue (cluster_id, name, display_name, cpu, ram, scratch, gpu)
+                        VALUES ((
+                            SELECT id FROM cluster WHERE name = '{cluster}'),
+                            '{queue}', '{queue}', NULL, NULL, NULL, NULL);""".format(**r)
+                    insert_record(q)
+                    insert_record(query)
 
 
 if __name__ == '__main__':
