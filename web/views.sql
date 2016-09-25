@@ -12,11 +12,11 @@ FROM fs_occupancy a
 DROP VIEW IF EXISTS q;
 CREATE VIEW q(system, system_name,
                queue, queue_name, cpu, ram, scratch, gpu,
-              cqload, used, res, avail, total, aoacds, cdsue, recorded)
+              cqload, used, used_p, res, avail, total, aoacds, cdsue, recorded)
 AS (
 SELECT c.name, c.display_name,
        b.name, b.display_name, b.cpu, b.ram, b.scratch, b.gpu,
-       a.cqload, a.used, a.res, a.avail, a.total, a.aoacds, a.cdsue, a.recorded
+       a.cqload, a.used, a.used / a.total, a.res, a.avail, a.total, a.aoacds, a.cdsue, a.recorded
 FROM q_occupancy a
     INNER JOIN queue b
         ON a.queue_id = b.id
@@ -57,4 +57,15 @@ FROM cq
 INNER JOIN cfs
 ON cq.system = cfs.system AND cq.recorded = cfs.recorded
     GROUP BY cq.recorded,cq.system
+);
+
+DROP VIEW IF EXISTS queue_details;
+CREATE VIEW queue_details(system, system_name,
+                          name, display_name, cpu, ram, scratch, gpu)
+AS (
+SELECT c.name, c.display_name,
+       b.name, b.display_name, b.cpu, b.ram, b.scratch, b.gpu
+FROM queue b
+    INNER JOIN cluster c
+        ON b.cluster_id = c.id
 );
