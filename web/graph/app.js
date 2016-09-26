@@ -2,6 +2,7 @@ $(document).ready(function(){
 	$.ajax({
 		url: "api.php",
 		method: "GET",
+		data: { graph : 'clusters' },
 		success: function(data) {
 			console.log(data);
 
