@@ -54,4 +54,7 @@ Temporary Items
 *.ini
 *.history
 
+secret.*
+.remote-sync.json
+
 __pycache__
