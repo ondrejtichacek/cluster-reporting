@@ -30,8 +30,20 @@ function returnClusters($clusters, $mysqli) {
 		$result = $mysqli->query($query);
 
 		//loop through the returned data
-		foreach ($result as $row) {
-			$dataset['data'][] = ['x' => $row['recorded'], 'y'=> intval($row['q_used'])];
+		foreach ($result as $key => $row) {
+		  //$dataset['data'][] = ['x' => $row['recorded'], 'y'=> intval($row['q_used'])];
+			if ($key > 2) {
+				$last_key = key( array_slice( $dataset['data'], -1, 1, TRUE ) );
+			}
+		 	if ($key > 2 &&
+		 			($dataset['data'][$last_key]['y'] == intval($row['q_used']) &&
+		 			 $dataset['data'][$last_key -1]['y'] == intval($row['q_used'])
+		 		  )) {
+			  $dataset['data'][$last_key]['x'] = $row['recorded'];
+			} else {
+				$dataset['data'][] = ['x' => $row['recorded'],
+															'y'=> intval($row['q_used'])];
+			}
 		}
 
 		$data['datasets'][] = $dataset;
@@ -77,9 +89,19 @@ function returnQueues($clusters, $mysqli) {
 			$result = $mysqli->query($query);
 
 			//loop through the returned data
-			foreach ($result as $row) {
-				// $dataset['data'][] = ['x' => strtotime($row['recorded']), 'y'=> intval($row['q_used'])];
-				$dataset['data'][] = ['x' => $row['recorded'], 'y'=> doubleval($row['used_p'])];
+			foreach ($result as $key => $row) {
+				if ($key > 2) {
+					$last_key = key( array_slice( $dataset['data'], -1, 1, TRUE ) );
+				}
+			 	if ($key > 2 &&
+			 			($dataset['data'][$last_key]['y'] == doubleval($row['used_p']) &&
+			 			 $dataset['data'][$last_key -1]['y'] == doubleval($row['used_p'])
+			 		  )) {
+				  $dataset['data'][$last_key]['x'] = $row['recorded'];
+				} else {
+					$dataset['data'][] = ['x' => $row['recorded'],
+																'y'=> doubleval($row['used_p'])];
+				}
 			}
 
 			$data['datasets'][] = $dataset;
