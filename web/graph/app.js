@@ -1,37 +1,44 @@
-$(document).ready(function(){
+var randomColorFactor = function() {
+		return Math.round(Math.random() * 255);
+};
+var randomColor = function(opacity) {
+		return 'rgba(' + randomColorFactor() + ',' + randomColorFactor() + ',' + randomColorFactor() + ',' + (opacity || '.3') + ')';
+};
+
+function hexToRgb(hex) {
+	 var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+	 return result ? {
+			 r: parseInt(result[1], 16),
+			 g: parseInt(result[2], 16),
+			 b: parseInt(result[3], 16)
+	 } : null;
+}
+
+function hexToRgba(hex,opacity) {
+	var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+	return 'rgba(' + parseInt(result[1], 16) + ','
+								 + parseInt(result[2], 16) + ','
+								 + parseInt(result[3], 16) + ','
+								 + (opacity || '.3') + ')';
+};
+
+function ShowGraph(){
 	$.ajax({
 		url: "api.php",
 		method: "GET",
 		data: {
-			//graph : 'clusters'
-			graph : 'queues'
+			fun : 'getGraphData',
+			graph : $("#graph_selector option:selected").val(),
+			cluster : $("#cluster_selector option:selected").val()
 		},
 		success: function(data) {
-			console.log(data);
-
-			var randomColorFactor = function() {
-					return Math.round(Math.random() * 255);
-			};
-			var randomColor = function(opacity) {
-					return 'rgba(' + randomColorFactor() + ',' + randomColorFactor() + ',' + randomColorFactor() + ',' + (opacity || '.3') + ')';
-			};
-
-			function hexToRgb(hex) {
-				 var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-				 return result ? {
-						 r: parseInt(result[1], 16),
-						 g: parseInt(result[2], 16),
-						 b: parseInt(result[3], 16)
-				 } : null;
+			try {
+				// allways first destroy previous chart
+				window.myLine.destroy();
+			} catch (e) {
 			}
 
-			function hexToRgba(hex,opacity) {
-				var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-				return 'rgba(' + parseInt(result[1], 16) + ','
-				               + parseInt(result[2], 16) + ','
-											 + parseInt(result[3], 16) + ','
-											 + (opacity || '.3') + ')';
-			};
+			console.log(data);
 
 			var title_text = {
 				clusters: 'Free cores clusters',
@@ -59,7 +66,16 @@ $(document).ready(function(){
 									xAxes: [{
                 			type: 'time'
             			}]
-        			}
+        			},
+					    pan: {
+					        enabled: true,
+					        mode: 'x'
+					    },
+					    zoom: {
+					        enabled: true,
+									//drag: true,
+					        mode: 'x',
+					    }
 					}
 			};
 
@@ -113,4 +129,42 @@ $(document).ready(function(){
 			console.log(data);
 		}
 	});
+}
+
+function createClusterSelector(){
+	  $.ajax({
+	      type     : 'GET',
+	      url      : 'api.php',
+				data 		 : {
+					fun : 'getClusters'
+				},
+	      cache: false,
+	      success  : function(data) {
+	          var output = '<option value="">All</option>';
+
+	          $.each(data, function(key, val){
+	              output += '<option value="' + val.name + '">' + val.display_name + '</option>';
+	          });
+
+	          $('#cluster_selector').empty().append(output);
+	      },
+	      error: function(){
+	          console.log("Ajax failed");
+	      }
+	  });
+
+}
+
+$(document).ready(function(){
+	ShowGraph();
+	createClusterSelector();
+});
+$(document).on('change',"select#graph_selector",function(){
+	ShowGraph();
+});
+$(document).on('change',"select#cluster_selector",function(){
+	ShowGraph();
+});
+$(document).on('click',"button#reset_chart",function(){
+	ShowGraph();
 });

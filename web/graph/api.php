@@ -4,7 +4,7 @@
 header('Content-Type: application/json');
 
 function getClusters($mysqli) {
-	$query = sprintf("SELECT name FROM cluster");
+	$query = sprintf("SELECT name, display_name FROM cluster");
 	$result = $mysqli->query($query);
 
 	$clusters = array();
@@ -124,21 +124,39 @@ if(!$mysqli){
 	die("Connection failed: " . $mysqli->error);
 }
 
-$clusters = getClusters($mysqli);
+$fun = htmlspecialchars($_GET['fun']);
 
-switch (htmlspecialchars($_GET['graph'])) {
-	case 'clusters':
-		$data = returnClusters($clusters, $mysqli);
+switch ($fun) {
+	case 'getClusters':
+		$data = getClusters($mysqli);
 		break;
+	case 'getGraphData':
 
-	case 'queues':
-		$data = returnQueues($clusters, $mysqli);
-		break;
+		if (empty($_GET['cluster'])) {
+			$clusters = getClusters($mysqli);
+		} else {
+			$clusters[] = ['name' => htmlspecialchars($_GET['cluster'])];
+		}
+
+		switch (htmlspecialchars($_GET['graph'])) {
+			case 'clusters':
+				$data = returnClusters($clusters, $mysqli);
+				break;
+
+			case 'queues':
+				$data = returnQueues($clusters, $mysqli);
+				break;
+
+			default:
+				# code...
+				break;
+		}
 
 	default:
 		# code...
 		break;
 }
+
 
 //close connection
 $mysqli->close();
