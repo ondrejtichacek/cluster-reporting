@@ -69,3 +69,16 @@ FROM queue b
     INNER JOIN cluster c
         ON b.cluster_id = c.id
 );
+
+DROP VIEW IF EXISTS c_occupancy_weekdays;
+CREATE VIEW c_occupancy_weekdays(system, system_name, used, res, avail, total, aoacds, cdsue, weekday, wdno)
+AS (
+SELECT q.system, q.system_name,
+       AVG(q.used), AVG(q.res), AVG(q.avail),
+       AVG(q.total), AVG(q.aoacds), AVG(q.cdsue),
+       DAYNAME(q.recorded) AS weekday,
+       (case DAYOFWEEK(q.recorded) WHEN 1 THEN 8 else DAYOFWEEK(q.recorded) END) - 1 AS wdno
+FROM q
+    GROUP BY q.system, weekday, wdno
+    ORDER BY wdno
+);

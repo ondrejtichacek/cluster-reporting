@@ -18,10 +18,13 @@ function getClusters($mysqli) {
 
 function returnClusters($clusters, $mysqli) {
 	$data = array();
-	foreach ($clusters as $cluster) {
+	foreach ($clusters as $key => $cluster) {
 
 		$dataset = array();
 	  $dataset['label'] = $cluster['name'];
+		$dataset['cluster'] = $cluster['name'];
+		$dataset['i'] = 0;
+		$dataset['len'] = 1;
 
 		$query = sprintf("SELECT q_used, recorded FROM c WHERE system = '%s' ORDER BY recorded", $cluster['name']);
 		//echo($query);
@@ -70,8 +73,11 @@ function returnQueues($clusters, $mysqli) {
 		}
 		$result->close();
 
-		foreach ($queues as $queue) {
+		foreach ($queues as $qkey => $queue) {
 			$dataset = array();
+			$dataset['cluster'] = $cluster['name'];
+			$dataset['i'] = $qkey;
+			$dataset['len'] = count($queues);
 		  $dataset['label'] = $queue['name'];
 
 			// $query = sprintf("SET @a = 0;
@@ -114,6 +120,39 @@ function returnQueues($clusters, $mysqli) {
 	return $data;
 }
 
+function returnClustersWeekdayOccupancy($clusters, $mysqli) {
+	$data = array();
+	foreach ($clusters as $key => $cluster) {
+
+		$dataset = array();
+	  $dataset['label'] = $cluster['name'];
+		$dataset['cluster'] = $cluster['name'];
+		$dataset['i'] = 0;
+		$dataset['len'] = 1;
+
+		$query = sprintf("SELECT used, weekday FROM c_occupancy_weekdays WHERE system = '%s' ORDER BY wdno", $cluster['name']);
+		//echo($query);
+
+		//execute query
+		$result = $mysqli->query($query);
+
+		//loop through the returned data
+		foreach ($result as $key => $row) {
+			$dataset['data'][] = doubleval($row['used']);
+		}
+
+		$data['datasets'][] = $dataset;
+
+		//free memory associated with result
+		$result->close();
+	}
+
+	$data['labels'] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+	return $data;
+
+}
+
 //database
 include_once('secret.php');
 
@@ -139,13 +178,17 @@ switch ($fun) {
 		}
 
 		switch (htmlspecialchars($_GET['graph'])) {
-			case 'clusters':
+			case 'ClustersOccupancy':
 				$data = returnClusters($clusters, $mysqli);
 				break;
 
-			case 'queues':
+			case 'QueuesOccupancy':
 				$data = returnQueues($clusters, $mysqli);
 				break;
+
+			case 'ClustersWeekdayOccupancy':
+					$data = returnClustersWeekdayOccupancy($clusters, $mysqli);
+					break;
 
 			default:
 				# code...
