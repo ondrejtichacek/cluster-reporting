@@ -27,10 +27,10 @@ function SeqColormap(i, n, system) {
 		case 'magnesium':
 				var colors = ['#a50f15','#ef3b2c','#fc9272'];
 			break;
-		case 'sodium':
+		case 'oxygen':
 				var colors = ['#7a0177','#dd3497','#fa9fb5'];
 			break;
-		case 'oxygen':
+		case 'sodium':
 				var colors = ['#08519c','#4292c6','#9ecae1'];
 			break;
 		default:
@@ -214,28 +214,35 @@ function myBarGraph(data, title_text) {
 }
 
 function ShowGraph(){
+
+	var selected_clusters = [{name : $("#cluster_selector option:selected").val()}];
+
+	var params = {
+		fun 			: 'getGraphData',
+		graph 		: $("#graph_selector option:selected").val(),
+		occupancy : $("#occupancy_selector option:selected").val(),
+		clusters 	: selected_clusters,
+		valuetype : $("#value_type_selector option:selected").val()
+	};
+
 	$.ajax({
 		url: "api.php",
 		method: "GET",
-		data: {
-			fun : 'getGraphData',
-			graph : $("#graph_selector option:selected").val(),
-			cluster : $("#cluster_selector option:selected").val()
-		},
+		data: params,
 		success: function(data) {
-			switch ($("#graph_selector option:selected").val()) {
+			switch (params.graph) {
 				case 'ClustersWeekdayOccupancy':
-					var title_text = 'Average free cores clusters';
+					var title_text = 'Average ' + $("#occupancy_selector option:selected").text() + ' cores ' + (params.valuetype == 'RelativeValues' ? 'ratio ' : '') + '- clusters';
 					myBarGraph(data, title_text)
 					break;
 
 				case 'ClustersOccupancy':
-					var title_text = 'Free cores clusters';
+					var title_text = $("#occupancy_selector option:selected").text()  + ' cores ' + (params.valuetype == 'RelativeValues' ? 'ratio ' : '') + '- clusters';
 					myLineGraph(data, title_text)
 					break;
 
 				case 'QueuesOccupancy':
-					var title_text = 'Free cores ratio queues';
+					var title_text = $("#occupancy_selector option:selected").text()  + ' cores ' + (params.valuetype == 'RelativeValues' ? 'ratio ' : '') + '- queues';
 					myLineGraph(data, title_text)
 					break;
 
@@ -281,7 +288,13 @@ $(document).ready(function(){
 $(document).on('change',"select#graph_selector",function(){
 	ShowGraph();
 });
+$(document).on('change',"select#occupancy_selector",function(){
+	ShowGraph();
+});
 $(document).on('change',"select#cluster_selector",function(){
+	ShowGraph();
+});
+$(document).on('change',"select#value_type_selector",function(){
 	ShowGraph();
 });
 $(document).on('click',"button#reset_chart",function(){

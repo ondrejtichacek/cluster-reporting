@@ -16,9 +16,12 @@ function getClusters($mysqli) {
 	return $clusters;
 }
 
-function returnClusters($clusters, $mysqli) {
+function returnClusters($param, $mysqli) {
 	$data = array();
-	foreach ($clusters as $key => $cluster) {
+
+	$allowed_param_occupancy = ['avail', 'used', 'res', 'total', 'aoacds', 'cdsue'];
+
+	foreach ($param['clusters'] as $key => $cluster) {
 
 		$dataset = array();
 	  $dataset['label'] = $cluster['name'];
@@ -26,26 +29,42 @@ function returnClusters($clusters, $mysqli) {
 		$dataset['i'] = 0;
 		$dataset['len'] = 1;
 
-		$query = sprintf("SELECT q_used, recorded FROM c WHERE system = '%s' ORDER BY recorded", $cluster['name']);
-		//echo($query);
+		if (in_array($param['occupancy'], $allowed_param_occupancy)) {
+				$occupancyval = 'q_' . $param['occupancy'];
+		}
+
+		switch ($param['valuetype']) {
+			case 'RelativeValues':
+				$occupancyval .= '/q_total';
+				break;
+			case 'AbsoluteValues':
+				break;
+		}
+
+		$query = sprintf(
+			"SELECT %s AS occupancy, recorded
+				FROM c
+				WHERE system = '%s'
+				ORDER BY recorded",
+					$occupancyval,
+					$cluster['name']);
 
 		//execute query
 		$result = $mysqli->query($query);
 
 		//loop through the returned data
 		foreach ($result as $key => $row) {
-		  //$dataset['data'][] = ['x' => $row['recorded'], 'y'=> intval($row['q_used'])];
 			if ($key > 2) {
 				$last_key = key( array_slice( $dataset['data'], -1, 1, TRUE ) );
 			}
 		 	if ($key > 2 &&
-		 			($dataset['data'][$last_key]['y'] == intval($row['q_used']) &&
-		 			 $dataset['data'][$last_key -1]['y'] == intval($row['q_used'])
+		 			($dataset['data'][$last_key]['y'] == doubleval($row['occupancy']) &&
+		 			 $dataset['data'][$last_key -1]['y'] == doubleval($row['occupancy'])
 		 		  )) {
 			  $dataset['data'][$last_key]['x'] = $row['recorded'];
 			} else {
 				$dataset['data'][] = ['x' => $row['recorded'],
-															'y'=> intval($row['q_used'])];
+															'y'=> doubleval($row['occupancy'])];
 			}
 		}
 
@@ -59,10 +78,12 @@ function returnClusters($clusters, $mysqli) {
 
 }
 
-function returnQueues($clusters, $mysqli) {
+function returnQueues($param, $mysqli) {
 	$data = array();
 
-	foreach ($clusters as $cluster) {
+	$allowed_param_occupancy = ['avail', 'used', 'res', 'total', 'aoacds', 'cdsue'];
+
+	foreach ($param['clusters'] as $cluster) {
 
 		$query = sprintf("SELECT name FROM queue_details WHERE system = '%s'", $cluster['name']);
 		$result = $mysqli->query($query);
@@ -86,10 +107,26 @@ function returnQueues($clusters, $mysqli) {
 			// 	WHERE system = '%s' AND queue = '%s' AND (@a := @a + 1) % 20 = 0
 			// 	ORDER BY recorded", $cluster['name'], $queue['name'] );
 
-			$query = sprintf("SELECT used_p, recorded
-				FROM q
-				WHERE system = '%s' AND queue = '%s'
-				ORDER BY recorded", $cluster['name'], $queue['name'] );
+			if (in_array($param['occupancy'], $allowed_param_occupancy)) {
+					$occupancyval = $param['occupancy'];
+			}
+
+			switch ($param['valuetype']) {
+				case 'RelativeValues':
+					$occupancyval .= '/total';
+					break;
+				case 'AbsoluteValues':
+					break;
+			}
+
+			$query = sprintf(
+				"SELECT %s AS occupancy, recorded
+					FROM q
+					WHERE system = '%s' AND queue = '%s'
+					ORDER BY recorded",
+						$occupancyval,
+						$cluster['name'],
+						$queue['name'] );
 
 			//execute query
 			$result = $mysqli->query($query);
@@ -100,13 +137,13 @@ function returnQueues($clusters, $mysqli) {
 					$last_key = key( array_slice( $dataset['data'], -1, 1, TRUE ) );
 				}
 			 	if ($key > 2 &&
-			 			($dataset['data'][$last_key]['y'] == doubleval($row['used_p']) &&
-			 			 $dataset['data'][$last_key -1]['y'] == doubleval($row['used_p'])
+			 			($dataset['data'][$last_key]['y'] == doubleval($row['occupancy']) &&
+			 			 $dataset['data'][$last_key -1]['y'] == doubleval($row['occupancy'])
 			 		  )) {
 				  $dataset['data'][$last_key]['x'] = $row['recorded'];
 				} else {
 					$dataset['data'][] = ['x' => $row['recorded'],
-																'y'=> doubleval($row['used_p'])];
+																'y'=> doubleval($row['occupancy'])];
 				}
 			}
 
@@ -120,9 +157,24 @@ function returnQueues($clusters, $mysqli) {
 	return $data;
 }
 
-function returnClustersWeekdayOccupancy($clusters, $mysqli) {
+function returnClustersWeekdayOccupancy($param, $mysqli) {
 	$data = array();
-	foreach ($clusters as $key => $cluster) {
+
+	$allowed_param_occupancy = ['avail', 'used', 'res', 'total', 'aoacds', 'cdsue'];
+
+	foreach ($param['clusters'] as $key => $cluster) {
+
+		if (in_array($param['occupancy'], $allowed_param_occupancy)) {
+				$occupancyval = $param['occupancy'];
+		}
+
+		switch ($param['valuetype']) {
+			case 'RelativeValues':
+				$occupancyval .= '/total';
+				break;
+			case 'AbsoluteValues':
+				break;
+		}
 
 		$dataset = array();
 	  $dataset['label'] = $cluster['name'];
@@ -130,7 +182,13 @@ function returnClustersWeekdayOccupancy($clusters, $mysqli) {
 		$dataset['i'] = 0;
 		$dataset['len'] = 1;
 
-		$query = sprintf("SELECT used, weekday FROM c_occupancy_weekdays WHERE system = '%s' ORDER BY wdno", $cluster['name']);
+		$query = sprintf(
+			"SELECT %s as occupancy, weekday
+				FROM c_occupancy_weekdays
+				WHERE system = '%s'
+				ORDER BY wdno",
+					$occupancyval,
+				 	$cluster['name']);
 		//echo($query);
 
 		//execute query
@@ -138,7 +196,7 @@ function returnClustersWeekdayOccupancy($clusters, $mysqli) {
 
 		//loop through the returned data
 		foreach ($result as $key => $row) {
-			$dataset['data'][] = doubleval($row['used']);
+			$dataset['data'][] = doubleval($row['occupancy']);
 		}
 
 		$data['datasets'][] = $dataset;
@@ -163,31 +221,31 @@ if(!$mysqli){
 	die("Connection failed: " . $mysqli->error);
 }
 
-$fun = htmlspecialchars($_GET['fun']);
 
-switch ($fun) {
+$param = $_GET;
+
+
+switch ($param['fun']) {
 	case 'getClusters':
 		$data = getClusters($mysqli);
 		break;
 	case 'getGraphData':
 
-		if (empty($_GET['cluster'])) {
-			$clusters = getClusters($mysqli);
-		} else {
-			$clusters[] = ['name' => htmlspecialchars($_GET['cluster'])];
+		if (empty($param['clusters']) || empty($param['clusters'][0]['name']) ) {
+			$param['clusters'] = getClusters($mysqli);
 		}
 
-		switch (htmlspecialchars($_GET['graph'])) {
+		switch ($param['graph']) {
 			case 'ClustersOccupancy':
-				$data = returnClusters($clusters, $mysqli);
+				$data = returnClusters($param, $mysqli);
 				break;
 
 			case 'QueuesOccupancy':
-				$data = returnQueues($clusters, $mysqli);
+				$data = returnQueues($param, $mysqli);
 				break;
 
 			case 'ClustersWeekdayOccupancy':
-					$data = returnClustersWeekdayOccupancy($clusters, $mysqli);
+					$data = returnClustersWeekdayOccupancy($param, $mysqli);
 					break;
 
 			default:
