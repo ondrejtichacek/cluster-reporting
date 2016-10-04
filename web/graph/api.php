@@ -16,6 +16,74 @@ function getClusters($mysqli) {
 	return $clusters;
 }
 
+function returnFilesystem($param, $mysqli) {
+	$data = array();
+
+	$allowed_param_occupancy = ['avail', 'used'];
+
+	foreach ($param['clusters'] as $key => $cluster) {
+
+		$dataset = array();
+		$dataset['label'] = $cluster['name'];
+		$dataset['cluster'] = $cluster['name'];
+		$dataset['i'] = 0;
+		$dataset['len'] = 1;
+
+		if (in_array($param['occupancy'], $allowed_param_occupancy)) {
+			$occupancyval = $param['occupancy'];
+		}
+
+		switch ($param['valuetype']) {
+			case 'RelativeValues':
+				$occupancyval .= '/(used+avail)';
+				$param['scalefactor'] = 1;
+				break;
+			case 'AbsoluteValues':
+				break;
+		}
+
+		$query = sprintf(
+			"SELECT %s AS occupancy, recorded
+				FROM fs
+				WHERE system = '%s'
+				ORDER BY recorded",
+					$occupancyval,
+					$cluster['name']);
+
+		//execute query
+		$result = $mysqli->query($query);
+
+		//loop through the returned data
+		foreach ($result as $key => $row) {
+			if ($key > 2) {
+				$last_key = key( array_slice( $dataset['data'], -1, 1, TRUE ) );
+			}
+
+			$y = doubleval($row['occupancy'])*$param['scalefactor'];
+
+			if ($key > 2 &&
+					(($dataset['data'][$last_key]['y'] - $y)/$y < $param['precision'] &&
+					 ($dataset['data'][$last_key -1]['y'] - $y)/$y < $param['precision']
+				)) {
+				$dataset['data'][$last_key]['x'] = $row['recorded'];
+			} else {
+				$dataset['data'][] = [
+					'x' => $row['recorded'],
+					'y' => $y
+				];
+			}
+		}
+
+		$data['datasets'][] = $dataset;
+
+		//free memory associated with result
+		$result->close();
+	}
+
+	return $data;
+
+}
+
 function returnClusters($param, $mysqli) {
 	$data = array();
 
@@ -24,7 +92,7 @@ function returnClusters($param, $mysqli) {
 	foreach ($param['clusters'] as $key => $cluster) {
 
 		$dataset = array();
-	  $dataset['label'] = $cluster['name'];
+		$dataset['label'] = $cluster['name'];
 		$dataset['cluster'] = $cluster['name'];
 		$dataset['i'] = 0;
 		$dataset['len'] = 1;
@@ -57,14 +125,15 @@ function returnClusters($param, $mysqli) {
 			if ($key > 2) {
 				$last_key = key( array_slice( $dataset['data'], -1, 1, TRUE ) );
 			}
-		 	if ($key > 2 &&
-		 			($dataset['data'][$last_key]['y'] == doubleval($row['occupancy']) &&
-		 			 $dataset['data'][$last_key -1]['y'] == doubleval($row['occupancy'])
-		 		  )) {
-			  $dataset['data'][$last_key]['x'] = $row['recorded'];
+			if ($key > 2 &&
+					($dataset['data'][$last_key]['y'] == doubleval($row['occupancy']) &&
+					 $dataset['data'][$last_key -1]['y'] == doubleval($row['occupancy'])
+				)) {
+				$dataset['data'][$last_key]['x'] = $row['recorded'];
 			} else {
-				$dataset['data'][] = ['x' => $row['recorded'],
-															'y'=> doubleval($row['occupancy'])];
+				$dataset['data'][] = [
+					'x' => $row['recorded'],
+					'y' => doubleval($row['occupancy'])];
 			}
 		}
 
@@ -99,13 +168,13 @@ function returnQueues($param, $mysqli) {
 			$dataset['cluster'] = $cluster['name'];
 			$dataset['i'] = $qkey;
 			$dataset['len'] = count($queues);
-		  $dataset['label'] = $queue['name'];
+			$dataset['label'] = $queue['name'];
 
 			// $query = sprintf("SET @a = 0;
-			//   SELECT used_p, recorded
-			// 	FROM q
-			// 	WHERE system = '%s' AND queue = '%s' AND (@a := @a + 1) % 20 = 0
-			// 	ORDER BY recorded", $cluster['name'], $queue['name'] );
+			//	 SELECT used_p, recorded
+			//	FROM q
+			//	WHERE system = '%s' AND queue = '%s' AND (@a := @a + 1) % 20 = 0
+			//	ORDER BY recorded", $cluster['name'], $queue['name'] );
 
 			if (in_array($param['occupancy'], $allowed_param_occupancy)) {
 					$occupancyval = $param['occupancy'];
@@ -136,11 +205,11 @@ function returnQueues($param, $mysqli) {
 				if ($key > 2) {
 					$last_key = key( array_slice( $dataset['data'], -1, 1, TRUE ) );
 				}
-			 	if ($key > 2 &&
-			 			($dataset['data'][$last_key]['y'] == doubleval($row['occupancy']) &&
-			 			 $dataset['data'][$last_key -1]['y'] == doubleval($row['occupancy'])
-			 		  )) {
-				  $dataset['data'][$last_key]['x'] = $row['recorded'];
+				if ($key > 2 &&
+						($dataset['data'][$last_key]['y'] == doubleval($row['occupancy']) &&
+						 $dataset['data'][$last_key -1]['y'] == doubleval($row['occupancy'])
+						)) {
+					$dataset['data'][$last_key]['x'] = $row['recorded'];
 				} else {
 					$dataset['data'][] = ['x' => $row['recorded'],
 																'y'=> doubleval($row['occupancy'])];
@@ -177,7 +246,7 @@ function returnClustersWeekdayOccupancy($param, $mysqli) {
 		}
 
 		$dataset = array();
-	  $dataset['label'] = $cluster['name'];
+		$dataset['label'] = $cluster['name'];
 		$dataset['cluster'] = $cluster['name'];
 		$dataset['i'] = 0;
 		$dataset['len'] = 1;
@@ -188,7 +257,7 @@ function returnClustersWeekdayOccupancy($param, $mysqli) {
 				WHERE system = '%s'
 				ORDER BY wdno",
 					$occupancyval,
-				 	$cluster['name']);
+					$cluster['name']);
 		//echo($query);
 
 		//execute query
@@ -236,6 +305,10 @@ switch ($param['fun']) {
 		}
 
 		switch ($param['graph']) {
+			case 'FilesystemOccupancy':
+				$data = returnFilesystem($param, $mysqli);
+				break;
+
 			case 'ClustersOccupancy':
 				$data = returnClusters($param, $mysqli);
 				break;
