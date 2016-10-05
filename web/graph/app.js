@@ -228,7 +228,7 @@ function ShowGraph(){
 	params['precision'] = 0.001; // 0.1 %
 	params['scalefactor'] = 1e-6; // 1e6 kB = 1 GB
 
-	$.ajax({
+	return $.ajax({
 		url: "api.php",
 		method: "GET",
 		data: params,
@@ -262,7 +262,7 @@ function ShowGraph(){
 }
 
 function createClusterSelector(){
-	$.ajax({
+	return $.ajax({
 		type 	: 'GET',
 		url		: 'api.php',
 		data 	: {
@@ -284,12 +284,49 @@ function createClusterSelector(){
 	});
 }
 
+function createVariableSelector(){
+	return $.ajax({
+		type 	: 'GET',
+		url		: 'api.php',
+		data 	: {
+			fun 	: 'getVariables',
+			graph	: $("#graph_selector option:selected").val(),
+			},
+		cache: false,
+		success	: function(data) {
+
+			// store currently selected option
+			var selected_val = $("#occupancy_selector option:selected").val();
+
+			// construct the options
+			var output = '';
+			$.each(data, function(key, val){
+				output += '<option value="' + key + '">' + val + '</option>';
+			});
+
+			$('#occupancy_selector').empty().append(output);
+
+			// preserve previously elected option if exists
+			if (data[selected_val] !== undefined) {
+				$("#occupancy_selector").val(selected_val);
+			}
+
+		},
+		error: function(){
+			console.log("Ajax failed");
+		}
+	});
+}
+
 $(document).ready(function(){
-	createClusterSelector();
-	ShowGraph();
+	$.when(createVariableSelector(), createClusterSelector()).done(function(a1,a2){
+		ShowGraph();
+	});
 });
 $(document).on('change',"select#graph_selector",function(){
-	ShowGraph();
+	$.when(createVariableSelector()).done(function(a1){
+		ShowGraph();
+	});
 });
 $(document).on('change',"select#occupancy_selector",function(){
 	ShowGraph();

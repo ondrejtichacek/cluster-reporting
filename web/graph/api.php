@@ -298,6 +298,25 @@ switch ($param['fun']) {
 	case 'getClusters':
 		$data = getClusters($mysqli);
 		break;
+
+	case 'getVariables':
+		switch ($param['graph']) {
+			case 'ClustersOccupancy':
+			case 'QueuesOccupancy':
+			case 'ClustersWeekdayOccupancy':
+				$allowed_values = ['avail', 'used', 'res', 'total', 'aoacds', 'cdsue'];
+				$allowed_names = ['Available', 'Used', 'Reserved', 'Total', 'aoACDS', 'cdsuE'];
+				break;
+			case 'FilesystemOccupancy':
+				$allowed_values = ['avail', 'used'];
+				$allowed_names = ['Available', 'Used'];
+				break;
+		}
+
+		$data = array_combine($allowed_values, $allowed_names);
+
+		break;
+
 	case 'getGraphData':
 
 		if (empty($param['clusters']) || empty($param['clusters'][0]['name']) ) {
