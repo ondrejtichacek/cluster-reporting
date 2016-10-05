@@ -49,6 +49,7 @@ Temporary Items
 # Application specific files
 *-df.txt
 *-qstat.txt
+*-qhost-q.xml
 *.log
 *.cfg
 *.ini
