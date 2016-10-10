@@ -82,3 +82,15 @@ FROM q
     GROUP BY q.system, weekday, wdno
     ORDER BY wdno
 );
+
+DROP VIEW IF EXISTS c_occupancy_hours;
+CREATE VIEW c_occupancy_hours(system, system_name, used, res, avail, total, aoacds, cdsue, hour)
+AS (
+SELECT q.system, q.system_name,
+       AVG(q.used), AVG(q.res), AVG(q.avail),
+       AVG(q.total), AVG(q.aoacds), AVG(q.cdsue),
+       HOUR(q.recorded) AS hhour
+FROM q
+    GROUP BY q.system, hhour
+    ORDER BY hhour
+);

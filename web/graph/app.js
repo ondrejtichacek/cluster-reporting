@@ -124,24 +124,30 @@ function myLineGraph(data, title_text) {
 		//hex = myColormap(i, config.data.datasets.length);
 		hex = SeqColormap(dataset.i, dataset.len, dataset.cluster)
 
-		dataset.borderWidth = 3;
+		dataset.borderWidth = 1;
 		//dataset.borderDash = [20,10];
 		dataset.borderColor = hexToRgba(hex,1);
 
 		//dataset.backgroundColor = hexToRgba(hex,0.3);
 		dataset.fill = false;
 
-		dataset.steppedLine = true;
-		dataset.pointRadius = 6;
+		//dataset.steppedLine = true;
+		dataset.lineTension = 0;
 
-		//dataset.pointStyle = 'rect';
+		if ($("#datapoint_checkbox").is(':checked')){
+			dataset.pointRadius = 2;
 
-		dataset.pointBorderColor = hexToRgba(hex,1);
-		dataset.pointBackgroundColor = hexToRgba(hex,1);
-		dataset.pointBorderWidth = 1;
+			//dataset.pointStyle = 'rect';
 
-		dataset.pointHoverBackgroundColor = hexToRgba(hex,1);
-		dataset.pointHoverBorderColor = 'black';
+			dataset.pointBorderColor = hexToRgba(hex,1);
+			//dataset.pointBackgroundColor = hexToRgba(hex,1);
+			dataset.pointBorderWidth = 1;
+
+			//dataset.pointHoverBackgroundColor = hexToRgba(hex,1);
+			//dataset.pointHoverBorderColor = 'black';
+		} else {
+			dataset.pointRadius = 0;
+		}
 	});
 
 	var ctx = $("#mycanvas");
@@ -189,24 +195,24 @@ function myBarGraph(data, title_text) {
 		//hex = myColormap(i, config.data.datasets.length);
 		hex = SeqColormap(dataset.i, dataset.len, dataset.cluster)
 
-		dataset.borderWidth = 3;
+		dataset.borderWidth = 1;
 		//dataset.borderDash = [20,10];
 		dataset.borderColor = hexToRgba(hex,1);
 
 		dataset.backgroundColor = hexToRgba(hex,0.3);
 		//dataset.fill = false;
 
-		dataset.steppedLine = true;
-		dataset.pointRadius = 6;
+		//dataset.steppedLine = true;
+		//dataset.pointRadius = 1;
 
 		//dataset.pointStyle = 'rect';
 
-		dataset.pointBorderColor = hexToRgba(hex,1);
-		dataset.pointBackgroundColor = hexToRgba(hex,1);
-		dataset.pointBorderWidth = 1;
+		//dataset.pointBorderColor = hexToRgba(hex,1);
+		//dataset.pointBackgroundColor = hexToRgba(hex,1);
+		//dataset.pointBorderWidth = 1;
 
-		dataset.pointHoverBackgroundColor = hexToRgba(hex,1);
-		dataset.pointHoverBorderColor = 'black';
+		//dataset.pointHoverBackgroundColor = hexToRgba(hex,1);
+		//dataset.pointHoverBorderColor = 'black';
 	});
 
 	var ctx = $("#mycanvas");
@@ -235,6 +241,11 @@ function ShowGraph(){
 		success: function(data) {
 			switch (params.graph) {
 				case 'ClustersWeekdayOccupancy':
+					var title_text = 'Average ' + $("#occupancy_selector option:selected").text() + ' cores ' + (params.valuetype == 'RelativeValues' ? 'ratio ' : '') + '- clusters';
+					myBarGraph(data, title_text)
+					break;
+
+				case 'ClustersHoursOccupancy':
 					var title_text = 'Average ' + $("#occupancy_selector option:selected").text() + ' cores ' + (params.valuetype == 'RelativeValues' ? 'ratio ' : '') + '- clusters';
 					myBarGraph(data, title_text)
 					break;
@@ -335,6 +346,9 @@ $(document).on('change',"select#cluster_selector",function(){
 	ShowGraph();
 });
 $(document).on('change',"select#value_type_selector",function(){
+	ShowGraph();
+});
+$(document).on('change',"#datapoint_checkbox",function(){
 	ShowGraph();
 });
 $(document).on('click',"button#reset_chart",function(){

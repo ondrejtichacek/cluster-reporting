@@ -280,6 +280,62 @@ function returnClustersWeekdayOccupancy($param, $mysqli) {
 
 }
 
+function returnClustersHoursOccupancy($param, $mysqli) {
+	$data = array();
+
+	$allowed_param_occupancy = ['avail', 'used', 'res', 'total', 'aoacds', 'cdsue'];
+
+	foreach ($param['clusters'] as $key => $cluster) {
+
+		if (in_array($param['occupancy'], $allowed_param_occupancy)) {
+				$occupancyval = $param['occupancy'];
+		}
+
+		switch ($param['valuetype']) {
+			case 'RelativeValues':
+				$occupancyval .= '/total';
+				break;
+			case 'AbsoluteValues':
+				break;
+		}
+
+		$dataset = array();
+		$dataset['label'] = $cluster['name'];
+		$dataset['cluster'] = $cluster['name'];
+		$dataset['i'] = 0;
+		$dataset['len'] = 1;
+
+		$query = sprintf(
+			"SELECT %s as occupancy, hour
+				FROM c_occupancy_hours
+				WHERE system = '%s'
+				ORDER BY hour",
+					$occupancyval,
+					$cluster['name']);
+		//echo($query);
+
+		//execute query
+		$result = $mysqli->query($query);
+
+		//loop through the returned data
+		foreach ($result as $key => $row) {
+			$dataset['data'][] = doubleval($row['occupancy']);
+		}
+
+		$data['datasets'][] = $dataset;
+
+		//free memory associated with result
+		$result->close();
+	}
+
+	//$data['labels'] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+	$data['labels'] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'];
+
+	return $data;
+
+}
+
+
 //database
 include_once('secret.php');
 
@@ -304,6 +360,7 @@ switch ($param['fun']) {
 			case 'ClustersOccupancy':
 			case 'QueuesOccupancy':
 			case 'ClustersWeekdayOccupancy':
+			case 'ClustersHoursOccupancy':
 				$allowed_values = ['avail', 'used', 'res', 'total', 'aoacds', 'cdsue'];
 				$allowed_names = ['Available', 'Used', 'Reserved', 'Total', 'aoACDS', 'cdsuE'];
 				break;
@@ -337,11 +394,11 @@ switch ($param['fun']) {
 				break;
 
 			case 'ClustersWeekdayOccupancy':
-					$data = returnClustersWeekdayOccupancy($param, $mysqli);
-					break;
+				$data = returnClustersWeekdayOccupancy($param, $mysqli);
+				break;
 
-			default:
-				# code...
+			case 'ClustersHoursOccupancy':
+				$data = returnClustersHoursOccupancy($param, $mysqli);
 				break;
 		}
 
