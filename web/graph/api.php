@@ -147,6 +147,60 @@ function returnClusters($param, $mysqli) {
 
 }
 
+function returnNodeDetails($param, $mysqli) {
+	$data = array();
+
+	$allowed_param_occupancy = ['avail', 'used', 'res', 'total', 'aoacds', 'cdsue'];
+
+	foreach ($param['clusters'] as $key => $cluster) {
+
+		$dataset = array();
+		$dataset['label'] = $cluster['name'];
+		$dataset['cluster'] = $cluster['name'];
+		$dataset['i'] = 0;
+		$dataset['len'] = 1;
+
+		if (in_array($param['occupancy'], $allowed_param_occupancy)) {
+				$occupancyval = 'q_' . $param['occupancy'];
+		}
+
+		switch ($param['valuetype']) {
+			case 'RelativeValues':
+				$occupancyval .= '/q_total';
+				break;
+			case 'AbsoluteValues':
+				break;
+		}
+
+		$query = sprintf(
+			"SELECT num_proc, mem_total, swap_total, COUNT(*) as count
+				FROM node_details
+				WHERE system = '%s'
+				GROUP BY num_proc, mem_total, swap_total",
+					$cluster['name']);
+
+		//execute query
+		$result = $mysqli->query($query);
+
+		//loop through the returned data
+		foreach ($result as $key => $row) {
+			$dataset['data'][] = doubleval($row['count']);
+			$data['labels'][] = $row['num_proc'] . ' cores' .
+								', ' . $row['mem_total']  . ' RAM' .
+								//', ' . $row['swap_total'] . ' swap' .
+								'; COUNT';
+		}
+
+		$data['datasets'][] = $dataset;
+
+		//free memory associated with result
+		$result->close();
+	}
+
+	return $data;
+
+}
+
 function returnQueues($param, $mysqli) {
 	$data = array();
 
@@ -211,8 +265,9 @@ function returnQueues($param, $mysqli) {
 						)) {
 					$dataset['data'][$last_key]['x'] = $row['recorded'];
 				} else {
-					$dataset['data'][] = ['x' => $row['recorded'],
-																'y'=> doubleval($row['occupancy'])];
+					$dataset['data'][] = [
+						'x' => $row['recorded'],
+						'y'=> doubleval($row['occupancy'])];
 				}
 			}
 
@@ -399,6 +454,10 @@ switch ($param['fun']) {
 
 			case 'ClustersHoursOccupancy':
 				$data = returnClustersHoursOccupancy($param, $mysqli);
+				break;
+
+			case 'NodeDetails':
+				$data = returnNodeDetails($param, $mysqli);
 				break;
 		}
 

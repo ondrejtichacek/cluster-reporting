@@ -94,3 +94,14 @@ FROM q
     GROUP BY q.system, hhour
     ORDER BY hhour
 );
+
+DROP VIEW IF EXISTS node_details;
+CREATE VIEW node_details(system, system_name,
+                          name, num_proc, mem_total, swap_total)
+AS (
+SELECT c.name, c.display_name,
+       b.name, b.num_proc, b.mem_total, b.swap_total
+FROM nodes b
+    INNER JOIN cluster c
+        ON b.cluster_id = c.id
+);

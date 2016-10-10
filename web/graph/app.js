@@ -73,15 +73,15 @@ function myColormap(i,n) {
 function destroyGraphs() {
 	try {
 		// allways first destroy previous chart
-		window.myLine.destroy();
-		window.myBar.destroy();
+		window['myLine' + canvas_id].destroy();
+		window['myBar' + canvas_id].destroy();
 	} catch (e) {
 	}
 }
 
-function myLineGraph(data, title_text) {
+function myLineGraph(data, title_text, canvas_id) {
 
-	destroyGraphs();
+	destroyGraphs(canvas_id);
 
 	console.log(data);
 
@@ -150,13 +150,13 @@ function myLineGraph(data, title_text) {
 		}
 	});
 
-	var ctx = $("#mycanvas");
-	window.myLine = new Chart(ctx, config);
+	var ctx = $(canvas_id);
+	window['myLine' + canvas_id] = new Chart(ctx, config);
 }
 
-function myBarGraph(data, title_text) {
+function myBarGraph(data, title_text, canvas_id) {
 
-	destroyGraphs();
+	destroyGraphs(canvas_id);
 
 	console.log(data);
 
@@ -215,11 +215,84 @@ function myBarGraph(data, title_text) {
 		//dataset.pointHoverBorderColor = 'black';
 	});
 
-	var ctx = $("#mycanvas");
-	window.myBar = new Chart(ctx, config);
+	var ctx = $(canvas_id);
+	window['myBar' + canvas_id] = new Chart(ctx, config);
 }
 
-function ShowGraph(){
+function myPieGraph(data, title_text, canvas_id) {
+
+	destroyGraphs(canvas_id);
+
+	console.log(data);
+
+	var config = {
+		type: 'doughnut',
+		data: data,
+		options: {
+			responsive: true,
+			title: {
+				display: true,
+				text: title_text
+			},
+			legend: {
+				display: false,
+			},
+			tooltips: {
+				mode: 'label',
+				callbacks: {
+				}
+			},
+			hover: {
+				mode: 'label'
+			},
+			/*scales: {
+				xAxes: [{
+						type: 'category'
+				}]
+			},*/
+			pan: {
+				enabled: false
+			},
+			zoom: {
+				enabled: false
+			}
+		}
+	};
+
+	$.each(config.data.datasets, function(i, dataset) {
+		//hex = myColormap(i, config.data.datasets.length);
+		hex = SeqColormap(dataset.i, dataset.len, dataset.cluster)
+
+		dataset.borderWidth = 1;
+		//dataset.borderDash = [20,10];
+		dataset.borderColor = hexToRgba(hex,1);
+
+		var hexArray = [];
+		$(dataset.data).each(function(i, data) {
+			hexArray.push(SeqColormap(i, dataset.data.length, dataset.cluster));
+		});
+
+		dataset.backgroundColor = hexArray;
+		//dataset.fill = false;
+
+		//dataset.steppedLine = true;
+		//dataset.pointRadius = 1;
+
+		//dataset.pointStyle = 'rect';
+
+		//dataset.pointBorderColor = hexToRgba(hex,1);
+		//dataset.pointBackgroundColor = hexToRgba(hex,1);
+		//dataset.pointBorderWidth = 1;
+
+		//dataset.pointHoverBackgroundColor = hexToRgba(hex,1);
+		//dataset.pointHoverBorderColor = 'black';
+	});
+
+	var ctx = $(canvas_id);
+	window['myBar' + canvas_id] = new Chart(ctx, config);
+}
+
+function CreateGraphParams(){
 
 	var selected_clusters = [{name : $("#cluster_selector option:selected").val()}];
 
@@ -234,35 +307,60 @@ function ShowGraph(){
 	params['precision'] = 0.001; // 0.1 %
 	params['scalefactor'] = 1e-6; // 1e6 kB = 1 GB
 
+	switch (params.graph) {
+		case 'ClustersWeekdayOccupancy':
+		case 'ClustersHoursOccupancy':
+			params['graphType'] = 'bar';
+			break;
+		case 'ClustersOccupancy':
+		case 'FilesystemOccupancy':
+		case 'QueuesOccupancy':
+			params['graphType'] = 'line';
+			break;
+	}
+
+	return params;
+}
+
+function CreateGraphTitle(params){
+	switch (params.graph) {
+		case 'ClustersWeekdayOccupancy':
+		case 'ClustersHoursOccupancy':
+			var title_text = 'Average ' + $("#occupancy_selector option:selected").text() + ' cores ' + (params.valuetype == 'RelativeValues' ? 'ratio ' : '') + '- clusters';
+			break;
+		case 'ClustersOccupancy':
+			var title_text = $("#occupancy_selector option:selected").text() + ' cores ' + (params.valuetype == 'RelativeValues' ? 'ratio ' : '') + '- clusters';
+			break;
+		case 'FilesystemOccupancy':
+			var title_text = $("#occupancy_selector option:selected").text() + ' fileystem ' + (params.valuetype == 'RelativeValues' ? 'ratio ' : '') + '- clusters';
+			break;
+		case 'QueuesOccupancy':
+			var title_text = $("#occupancy_selector option:selected").text() + ' cores ' + (params.valuetype == 'RelativeValues' ? 'ratio ' : '') + '- queues';
+			break;
+		case 'NodeDetails':
+			var title_text = params.clusters[0].name;
+			break;
+	}
+
+	return title_text;
+}
+
+function ShowGraph(canvas, params, title_text){
+
 	return $.ajax({
 		url: "api.php",
 		method: "GET",
 		data: params,
 		success: function(data) {
-			switch (params.graph) {
-				case 'ClustersWeekdayOccupancy':
-					var title_text = 'Average ' + $("#occupancy_selector option:selected").text() + ' cores ' + (params.valuetype == 'RelativeValues' ? 'ratio ' : '') + '- clusters';
-					myBarGraph(data, title_text)
+			switch (params.graphType){
+				case 'bar':
+					myBarGraph(data, title_text, canvas)
 					break;
-
-				case 'ClustersHoursOccupancy':
-					var title_text = 'Average ' + $("#occupancy_selector option:selected").text() + ' cores ' + (params.valuetype == 'RelativeValues' ? 'ratio ' : '') + '- clusters';
-					myBarGraph(data, title_text)
+				case 'line':
+					myLineGraph(data, title_text, canvas)
 					break;
-
-				case 'ClustersOccupancy':
-					var title_text = $("#occupancy_selector option:selected").text() + ' cores ' + (params.valuetype == 'RelativeValues' ? 'ratio ' : '') + '- clusters';
-					myLineGraph(data, title_text)
-					break;
-
-				case 'FilesystemOccupancy':
-					var title_text = $("#occupancy_selector option:selected").text() + ' fileystem ' + (params.valuetype == 'RelativeValues' ? 'ratio ' : '') + '- clusters';
-					myLineGraph(data, title_text)
-					break;
-
-				case 'QueuesOccupancy':
-					var title_text = $("#occupancy_selector option:selected").text() + ' cores ' + (params.valuetype == 'RelativeValues' ? 'ratio ' : '') + '- queues';
-					myLineGraph(data, title_text)
+				case 'pie':
+					myPieGraph(data, title_text, canvas)
 					break;
 			}
 		},
@@ -317,7 +415,7 @@ function createVariableSelector(){
 
 			$('#occupancy_selector').empty().append(output);
 
-			// preserve previously elected option if exists
+			// preserve previously elected option 	if exists
 			if (data[selected_val] !== undefined) {
 				$("#occupancy_selector").val(selected_val);
 			}
@@ -331,7 +429,127 @@ function createVariableSelector(){
 
 $(document).ready(function(){
 	$.when(createVariableSelector(), createClusterSelector()).done(function(a1,a2){
-		ShowGraph();
+		//ShowGraph();
+
+		var params_1 = {
+			fun 		: 'getGraphData',
+			graph		: 'ClustersOccupancy',
+			occupancy	: 'avail',
+			clusters 	: 'All',
+			valuetype 	: 'RelativeValues',
+
+			precision 	: 0.001, // 0.1 %
+			scalefactor : 1e-6, // 1e6 kB = 1 GB
+
+			graphType   : 'line'
+		};
+
+		setTimeout (function() {
+			ShowGraph('#canvas_1', params_1, CreateGraphTitle(params_1));
+		}, 0);
+
+		var params_2 = {
+			fun 		: 'getGraphData',
+			graph		: 'ClustersWeekdayOccupancy',
+			occupancy	: 'avail',
+			clusters 	: 'All',
+			valuetype 	: 'RelativeValues',
+
+			precision 	: 0.001, // 0.1 %
+			scalefactor : 1e-6, // 1e6 kB = 1 GB
+
+			graphType   : 'bar'
+		};
+
+		setTimeout (function() {
+			ShowGraph('#canvas_2', params_2, CreateGraphTitle(params_2));
+		}, 1200);
+
+		var params_a = {
+			fun 		: 'getGraphData',
+			graph		: 'NodeDetails',
+			occupancy	: 'avail',
+			clusters 	: [{name: 'magnesium'}],
+			valuetype 	: 'RelativeValues',
+
+			precision 	: 0.001, // 0.1 %
+			scalefactor : 1e-6, // 1e6 kB = 1 GB
+
+			graphType   : 'pie'
+		};
+
+		setTimeout (function() {
+			ShowGraph('#canvas_a', params_a, CreateGraphTitle(params_a));
+		}, 900);
+		var params_b = {
+			fun 		: 'getGraphData',
+			graph		: 'NodeDetails',
+			occupancy	: 'avail',
+			clusters 	: [{name: 'oxygen'}],
+			valuetype 	: 'RelativeValues',
+
+			precision 	: 0.001, // 0.1 %
+			scalefactor : 1e-6, // 1e6 kB = 1 GB
+
+			graphType   : 'pie'
+		};
+
+		setTimeout (function() {
+			ShowGraph('#canvas_b', params_b, CreateGraphTitle(params_b));
+		}, 1100);
+
+		var params_c = {
+			fun 		: 'getGraphData',
+			graph		: 'NodeDetails',
+			occupancy	: 'avail',
+			clusters 	: [{name: 'sodium'}],
+			valuetype 	: 'RelativeValues',
+
+			precision 	: 0.001, // 0.1 %
+			scalefactor : 1e-6, // 1e6 kB = 1 GB
+
+			graphType   : 'pie'
+		};
+
+		setTimeout (function() {
+			ShowGraph('#canvas_c', params_c, CreateGraphTitle(params_c));
+		}, 1300);
+
+		var params_3 = {
+			fun 		: 'getGraphData',
+			graph		: 'QueuesOccupancy',
+			occupancy	: 'avail',
+			clusters 	: 'All',
+			valuetype 	: 'RelativeValues',
+
+			precision 	: 0.001, // 0.1 %
+			scalefactor : 1e-6, // 1e6 kB = 1 GB
+
+			graphType   : 'line'
+		};
+
+		setTimeout (function() {
+			ShowGraph('#canvas_3', params_3, CreateGraphTitle(params_3));
+		}, 1800);
+
+		var params_4 = {
+			fun 		: 'getGraphData',
+			graph		: 'FilesystemOccupancy',
+			occupancy	: 'avail',
+			clusters 	: 'All',
+			valuetype 	: 'RelativeValues',
+
+			precision 	: 0.001, // 0.1 %
+			scalefactor : 1e-6, // 1e6 kB = 1 GB
+
+			graphType   : 'line'
+		};
+
+		setTimeout (function() {
+			ShowGraph('#canvas_4', params_4, CreateGraphTitle(params_4));
+		}, 600);
+
+
 	});
 });
 $(document).on('change',"select#graph_selector",function(){
