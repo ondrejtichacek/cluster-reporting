@@ -1,6 +1,9 @@
 [clusters]
 names = cluster1, cluster2, cluster3
 
+[dokuwiki]
+path = /var/www/example.com/
+
 [mysql]
 host = localhost
 database = dbname
