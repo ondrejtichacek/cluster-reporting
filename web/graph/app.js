@@ -70,13 +70,13 @@ function myColormap(i,n) {
 	return hex;
 }
 
-function destroyGraphs() {
-	try {
-		// allways first destroy previous chart
-		window['myLine' + canvas_id].destroy();
-		window['myBar' + canvas_id].destroy();
-	} catch (e) {
-	}
+function destroyGraphs(canvas_id) {
+	$.each(['myLine', 'myBar'], function(i, chartType){
+		try {
+			window[$(canvas_id).attr('id')].chart.destroy();
+		} catch (e) {
+		}
+	});
 }
 
 function myLineGraph(data, title_text, canvas_id) {
@@ -134,7 +134,8 @@ function myLineGraph(data, title_text, canvas_id) {
 		//dataset.steppedLine = true;
 		dataset.lineTension = 0;
 
-		if ($("#datapoint_checkbox").is(':checked')){
+		// if ($("#datapoint_checkbox").is(':checked')){
+		if ($(canvas_id).parent().find(".datapoint-checkbox").is(':checked')){
 			dataset.pointRadius = 2;
 
 			//dataset.pointStyle = 'rect';
@@ -151,7 +152,7 @@ function myLineGraph(data, title_text, canvas_id) {
 	});
 
 	var ctx = $(canvas_id);
-	window['myLine' + canvas_id] = new Chart(ctx, config);
+	window[ctx.attr('id')].chart = new Chart(ctx, config);
 }
 
 function myBarGraph(data, title_text, canvas_id) {
@@ -216,7 +217,7 @@ function myBarGraph(data, title_text, canvas_id) {
 	});
 
 	var ctx = $(canvas_id);
-	window['myBar' + canvas_id] = new Chart(ctx, config);
+	window[ctx.attr('id')].chart = new Chart(ctx, config);
 }
 
 function myPieGraph(data, title_text, canvas_id) {
@@ -238,9 +239,44 @@ function myPieGraph(data, title_text, canvas_id) {
 				display: false,
 			},
 			tooltips: {
-				mode: 'label',
-				callbacks: {
+				enabled: false,
+				custom: function(tooltip) {
+
+					// Tooltip Element
+					var tooltipEl = $('#node_info_tooltip');
+
+					// Hide if no tooltip
+					if (!tooltip.opacity) {
+						tooltipEl.css({
+							opacity: 0
+						});
+						$('.chartjs-wrap canvas')
+							.each(function(index, el) {
+							$(el).css('cursor', 'default');
+							});
+						return;
+						}
+
+					// Set Text
+					if (tooltip.body) {
+						var innerHtml = [
+							(tooltip.body[0].lines || []).join('\n')
+						];
+						tooltipEl.html(innerHtml.join('\n').replace(/,/g, ', '));
+					}
+
+					// Display
+					tooltipEl.css({
+						opacity: 1,
+					});
 				}
+				/*enabled: false,*/
+				/*tooltipFontSize: 10,
+				tooltipTemplate: "<%if (label){%><%=label%>: <%}%><%= value %>hrs",
+				percentageInnerCutout : 70*/
+				/*mode: 'label',
+				callbacks: {
+				}*/
 			},
 			hover: {
 				mode: 'label'
@@ -289,7 +325,7 @@ function myPieGraph(data, title_text, canvas_id) {
 	});
 
 	var ctx = $(canvas_id);
-	window['myBar' + canvas_id] = new Chart(ctx, config);
+	window[ctx.attr('id')].chart = new Chart(ctx, config);
 }
 
 function CreateGraphParams(){
@@ -302,7 +338,7 @@ function CreateGraphParams(){
 		occupancy	: $("#occupancy_selector option:selected").val(),
 		clusters 	: selected_clusters,
 		valuetype 	: $("#value_type_selector option:selected").val()
-	};
+	}
 
 	params['precision'] = 0.001; // 0.1 %
 	params['scalefactor'] = 1e-6; // 1e6 kB = 1 GB
@@ -393,19 +429,20 @@ function createClusterSelector(){
 	});
 }
 
-function createVariableSelector(){
+function createVariableSelector(graph, wrapper_div){
 	return $.ajax({
 		type 	: 'GET',
 		url		: 'api.php',
 		data 	: {
 			fun 	: 'getVariables',
-			graph	: $("#graph_selector option:selected").val(),
+			graph	: graph, //$("#graph_selector option:selected").val(),
 			},
 		cache: false,
 		success	: function(data) {
 
 			// store currently selected option
-			var selected_val = $("#occupancy_selector option:selected").val();
+			// var selected_val = $("#occupancy_selector option:selected").val();
+			var selected_val = $(wrapper_div).find("select.variable-selector option:selected").val();
 
 			// construct the options
 			var output = '';
@@ -413,11 +450,13 @@ function createVariableSelector(){
 				output += '<option value="' + key + '">' + val + '</option>';
 			});
 
-			$('#occupancy_selector').empty().append(output);
+			//$('#occupancy_selector').empty().append(output);
+			$(wrapper_div).find("select.variable-selector").empty().append(output);
 
 			// preserve previously elected option 	if exists
 			if (data[selected_val] !== undefined) {
-				$("#occupancy_selector").val(selected_val);
+				//$("#occupancy_selector").val(selected_val);
+				$(wrapper_div).find("select.variable-selector").val(selected_val);
 			}
 
 		},
@@ -428,10 +467,10 @@ function createVariableSelector(){
 }
 
 $(document).ready(function(){
-	$.when(createVariableSelector(), createClusterSelector()).done(function(a1,a2){
+	//$.when(createVariableSelector(), createClusterSelector()).done(function(a1,a2){
 		//ShowGraph();
 
-		var params_1 = {
+		window.chart_1.params = {
 			fun 		: 'getGraphData',
 			graph		: 'ClustersOccupancy',
 			occupancy	: 'avail',
@@ -441,14 +480,16 @@ $(document).ready(function(){
 			precision 	: 0.001, // 0.1 %
 			scalefactor : 1e-6, // 1e6 kB = 1 GB
 
-			graphType   : 'line'
+			graphType	 : 'line'
 		};
 
+		createVariableSelector('ClustersOccupancy', '#chart_1')
+
 		setTimeout (function() {
-			ShowGraph('#canvas_1', params_1, CreateGraphTitle(params_1));
+			ShowGraph('#canvas_1', window.chart_1.params, CreateGraphTitle(window.chart_1.params));
 		}, 0);
 
-		var params_2 = {
+		window.chart_2.params = {
 			fun 		: 'getGraphData',
 			graph		: 'ClustersWeekdayOccupancy',
 			occupancy	: 'avail',
@@ -458,14 +499,16 @@ $(document).ready(function(){
 			precision 	: 0.001, // 0.1 %
 			scalefactor : 1e-6, // 1e6 kB = 1 GB
 
-			graphType   : 'bar'
+			graphType	 : 'bar'
 		};
 
+		createVariableSelector('ClustersWeekdayOccupancy', '#chart_2')
+
 		setTimeout (function() {
-			ShowGraph('#canvas_2', params_2, CreateGraphTitle(params_2));
+			ShowGraph('#canvas_2', window.chart_2.params, CreateGraphTitle(window.chart_2.params));
 		}, 1200);
 
-		var params_a = {
+		window.chart_a.params = {
 			fun 		: 'getGraphData',
 			graph		: 'NodeDetails',
 			occupancy	: 'avail',
@@ -475,13 +518,14 @@ $(document).ready(function(){
 			precision 	: 0.001, // 0.1 %
 			scalefactor : 1e-6, // 1e6 kB = 1 GB
 
-			graphType   : 'pie'
+			graphType	 : 'pie'
 		};
 
 		setTimeout (function() {
-			ShowGraph('#canvas_a', params_a, CreateGraphTitle(params_a));
+			ShowGraph('#canvas_a', window.chart_a.params, CreateGraphTitle(window.chart_a.params));
 		}, 900);
-		var params_b = {
+
+		window.chart_b.params = {
 			fun 		: 'getGraphData',
 			graph		: 'NodeDetails',
 			occupancy	: 'avail',
@@ -491,14 +535,14 @@ $(document).ready(function(){
 			precision 	: 0.001, // 0.1 %
 			scalefactor : 1e-6, // 1e6 kB = 1 GB
 
-			graphType   : 'pie'
+			graphType	 : 'pie'
 		};
 
 		setTimeout (function() {
-			ShowGraph('#canvas_b', params_b, CreateGraphTitle(params_b));
+			ShowGraph('#canvas_b', window.chart_b.params, CreateGraphTitle(window.chart_b.params));
 		}, 1100);
 
-		var params_c = {
+		window.chart_c.params = {
 			fun 		: 'getGraphData',
 			graph		: 'NodeDetails',
 			occupancy	: 'avail',
@@ -508,14 +552,14 @@ $(document).ready(function(){
 			precision 	: 0.001, // 0.1 %
 			scalefactor : 1e-6, // 1e6 kB = 1 GB
 
-			graphType   : 'pie'
+			graphType	 : 'pie'
 		};
 
 		setTimeout (function() {
-			ShowGraph('#canvas_c', params_c, CreateGraphTitle(params_c));
+			ShowGraph('#canvas_c', window.chart_c.params, CreateGraphTitle(window.chart_c.params));
 		}, 1300);
 
-		var params_3 = {
+		window.chart_3.params = {
 			fun 		: 'getGraphData',
 			graph		: 'QueuesOccupancy',
 			occupancy	: 'avail',
@@ -525,14 +569,16 @@ $(document).ready(function(){
 			precision 	: 0.001, // 0.1 %
 			scalefactor : 1e-6, // 1e6 kB = 1 GB
 
-			graphType   : 'line'
+			graphType	 : 'line'
 		};
 
+		createVariableSelector('QueuesOccupancy', '#chart_3')
+
 		setTimeout (function() {
-			ShowGraph('#canvas_3', params_3, CreateGraphTitle(params_3));
+			ShowGraph('#canvas_3', window.chart_3.params, CreateGraphTitle(window.chart_3.params));
 		}, 1800);
 
-		var params_4 = {
+		window.chart_4.params = {
 			fun 		: 'getGraphData',
 			graph		: 'FilesystemOccupancy',
 			occupancy	: 'avail',
@@ -542,16 +588,37 @@ $(document).ready(function(){
 			precision 	: 0.001, // 0.1 %
 			scalefactor : 1e-6, // 1e6 kB = 1 GB
 
-			graphType   : 'line'
+			graphType	 : 'line'
 		};
 
+		createVariableSelector('FilesystemOccupancy', '#chart_4')
+
 		setTimeout (function() {
-			ShowGraph('#canvas_4', params_4, CreateGraphTitle(params_4));
+			ShowGraph('#canvas_4', window.chart_4.params, CreateGraphTitle(window.chart_4.params));
 		}, 600);
 
 
-	});
+	//});
 });
+
+$("select").change(function(e){
+	var wrapper_id = $(e.target).closest('.chart-container').attr('id');
+	var canvas = $(e.target).closest('.chart-container').children("canvas");
+
+	window[wrapper_id].params[e.target.name] = e.target.value;
+
+	ShowGraph(canvas, window[wrapper_id].params, CreateGraphTitle(window[wrapper_id].params));
+});
+
+$("input").change(function(e){
+	var wrapper_id = $(e.target).closest('.chart-container').attr('id');
+	var canvas = $(e.target).closest('.chart-container').children("canvas");
+
+	window[wrapper_id].params[e.target.name] = e.target.value;
+
+	ShowGraph(canvas, window[wrapper_id].params, CreateGraphTitle(window[wrapper_id].params));
+});
+
 $(document).on('change',"select#graph_selector",function(){
 	$.when(createVariableSelector()).done(function(a1){
 		ShowGraph();

@@ -185,10 +185,10 @@ function returnNodeDetails($param, $mysqli) {
 		//loop through the returned data
 		foreach ($result as $key => $row) {
 			$dataset['data'][] = doubleval($row['count']);
-			$data['labels'][] = $row['num_proc'] . ' cores' .
-								', ' . $row['mem_total']  . ' RAM' .
-								//', ' . $row['swap_total'] . ' swap' .
-								'; COUNT';
+			$data['labels'][] = '<strong>cores</strong>: '. $row['num_proc'] . '<br>' .
+								'<strong>mem</strong>: '. $row['mem_total'] . '<br>' .
+								'<strong>swap</strong>: '. $row['swap_total'] . '<br>' .
+								'<strong>count</strong>';
 		}
 
 		$data['datasets'][] = $dataset;

@@ -14,24 +14,44 @@
 				-ms-user-select: none;
 			}
 			.chart-container {
-				width: 50%;
+				/*margin-top: -1px;*/
+				/*margin-right: -1px;*/
+				border: 0px solid lightgray;
+				padding: 10px;
 				height: auto;
 			}
-			.flexcontainer-center {
+			.flexcontainer {
 				display: -webkit-flex;
 				display: flex;
 				-webkit-flex-direction: row;
 				flex-direction: row;
-				-webkit-align-items: center;
-				align-items: center;
-				-webkit-justify-content: center;
-				justify-content: center;
+			}
+			#body_wrapper {
+				border: 1px solid lightgray;
+				margin: 5px;
+			}
+			#node_info_tooltip {
+				padding: 10px;
+				-moz-transition: opacity 0.2s ease-out;  /* FF4+ */
+				-o-transition: opacity 0.2s ease-out;  /* Opera 10.5+ */
+				-webkit-transition: opacity 0.2s ease-out;  /* Saf3.2+, Chrome */
+				-ms-transition: opacity 0.2s ease-out;  /* IE10? */
+				transition: opacity 0.2s ease-out;
 			}
 		</style>
+
+		<!-- Latest compiled and minified CSS -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+		<!-- Optional theme -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+		<!-- Latest compiled and minified JavaScript -->
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 	</head>
 	<body>
 
-		<select id="graph_selector">
+		<!--<select id="graph_selector">
 			<option value="ClustersOccupancy">Clusters Occupancy</option>
 			<option value="QueuesOccupancy">Queues Occupancy</option>
 			<option value="FilesystemOccupancy">Filesystem Occupancy</option>
@@ -54,40 +74,125 @@
 
 		<button id="reset_chart">
 			Reset
-		</button>
-
-		<div class="flexcontainer-center">
-			<div style="width: 20%;">
-				<div style="width: 100%; height: auto;">
-					<canvas id="canvas_a"></canvas>
-				</div>
-				<div style="width: 100%; height: auto;">
-					<canvas id="canvas_b"></canvas>
-				</div>
-				<div style="width: 100%; height: auto;">
-					<canvas id="canvas_c"></canvas>
-				</div>
-			</div>
-			<div style="width: 80%;">
-				<div class="flexcontainer-center">
-					<div class="chart-container">
-						<canvas id="canvas_1"></canvas>
+		</button>-->
+		<div id="body_wrapper">
+			<div class="flexcontainer">
+				<div style="width: 10%; height: auto">
+					<div style="width: 100%; height: auto;" id="chart_a">
+						<canvas id="canvas_a" width="10" height="10"></canvas>
 					</div>
-					<div class="chart-container">
-						<canvas id="canvas_2"></canvas>
+					<div style="width: 100%; height: auto;" id="chart_b">
+						<canvas id="canvas_b" width="100" height="100"></canvas>
 					</div>
+					<div style="width: 100%; height: auto;" id="chart_c">
+						<canvas id="canvas_c" width="100" height="100"></canvas>
+					</div>
+					<div id="node_info_tooltip"></div>
 				</div>
-				<div class="flexcontainer-center">
-					<div style="width: 50%; height: auto;">
-						<canvas id="canvas_3"></canvas>
+				<div style="width: 90%;">
+					<div class="flexcontainer">
+						<div class="chart-container" style="width: 50%; height: auto; border-width: 0 0 1px 1px;" id="chart_1">
+							<form class="form-inline">
+								<div class="form-group">
+									<select class="form-control variable-selector" name="occupancy">
+										<option value="avail">Available</option>
+									</select>
+								</div>
+								<div class="form-group">
+									<label class="radio-inline">
+										<input type="radio" name="valuetype" value="AbsoluteValues"> Absolute
+									</label>
+									<label class="radio-inline">
+										<input type="radio" name="valuetype" value="RelativeValues" checked> Relative
+									</label>
+								</div>
+								<div class="form-group">
+									<label class="checkbox-inline">
+										<input type="checkbox" name="datapoints" class="datapoint-checkbox"> Show data points
+									</label>
+								</div>
+							</form>
+							<canvas id="canvas_1"></canvas>
+						</div>
+						<div class="chart-container" style="width: 50%; height: auto; border-width: 0 0 1px 1px;" id="chart_2">
+							<form class="form-inline">
+								<div class="form-group">
+									<select class="form-control variable-selector" name="occupancy">
+										<option value="avail">Available</option>
+									</select>
+								</div>
+								<div class="form-group">
+									<select class="form-control" name="graph">
+										<option value="ClustersWeekdayOccupancy">Weekdays</option>
+										<option value="ClustersHoursOccupancy">Hours</option>
+									</select>
+								</div>
+								<div class="form-group">
+									<label class="radio-inline">
+										<input type="radio" name="valuetype" value="AbsoluteValues"> Absolute
+									</label>
+									<label class="radio-inline">
+										<input type="radio" name="valuetype" value="RelativeValues" checked> Relative
+									</label>
+								</div>
+							</form>
+							<canvas id="canvas_2"></canvas>
+						</div>
 					</div>
-					<div style="width: 50%; height: auto;">
-						<canvas id="canvas_4"></canvas>
+					<div class="flexcontainer">
+						<div class="chart-container" style="width: 50%; height: auto; border-width: 0 0 0 1px;" id="chart_3">
+							<form class="form-inline">
+								<div class="form-group">
+									<select class="form-control variable-selector" name="occupancy">
+										<option value="avail">Available</option>
+									</select>
+								</div>
+								<div class="form-group">
+									<label class="radio-inline">
+										<input type="radio" name="valuetype" value="AbsoluteValues"> Absolute
+									</label>
+									<label class="radio-inline">
+										<input type="radio" name="valuetype" value="RelativeValues" checked> Relative
+									</label>
+								</div>
+								<div class="form-group">
+									<label class="checkbox-inline">
+										<input type="checkbox" name="datapoints" class="datapoint-checkbox"> Show data points
+									</label>
+								</div>
+							</form>
+							<canvas id="canvas_3"></canvas>
+						</div>
+						<div class="chart-container" style="width: 50%; height: auto; border-width: 0 0 0 1px;" id="chart_4">
+							<form class="form-inline">
+								<div class="form-group">
+									<select class="form-control variable-selector" name="occupancy">
+										<option value="avail">Available</option>
+									</select>
+								</div>
+								<div class="form-group">
+									<label class="radio-inline">
+										<input type="radio" name="valuetype" value="AbsoluteValues"> Absolute
+									</label>
+									<label class="radio-inline">
+										<input type="radio" name="valuetype" value="RelativeValues" checked> Relative
+									</label>
+								</div>
+								<div class="form-group">
+									<label class="checkbox-inline">
+										<input type="checkbox" name="datapoints" class="datapoint-checkbox"> Show data points
+									</label>
+								</div>
+							</form>
+							<canvas id="canvas_4"></canvas>
+						</div>
 					</div>
 				</div>
 			</div>
 		</div>
 		<!-- javascript -->
+
+
 		<script type="text/javascript" src="colorbrewer.min.js"></script>
 		<script type="text/javascript" src="app.js"></script>
 	</body>
