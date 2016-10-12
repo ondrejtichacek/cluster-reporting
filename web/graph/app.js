@@ -220,7 +220,7 @@ function myBarGraph(data, title_text, canvas_id) {
 	window[ctx.attr('id')].chart = new Chart(ctx, config);
 }
 
-function myPieGraph(data, title_text, canvas_id) {
+function myDoughnutGraph(data, title_text, canvas_id) {
 
 	destroyGraphs(canvas_id);
 
@@ -328,6 +328,26 @@ function myPieGraph(data, title_text, canvas_id) {
 	window[ctx.attr('id')].chart = new Chart(ctx, config);
 }
 
+function UpdateGraphParams(params){
+
+	switch (params.graph) {
+		case 'ClustersWeekdayOccupancy':
+		case 'ClustersHoursOccupancy':
+			params['graphType'] = 'bar';
+			break;
+		case 'ClustersOccupancy':
+		case 'FilesystemOccupancy':
+		case 'QueuesOccupancy':
+			params['graphType'] = 'line';
+			break;
+		case 'NodeDetails':
+			params['graphType'] = 'doughnut';
+			break;
+	}
+
+	return params;
+}
+
 function CreateGraphParams(){
 
 	var selected_clusters = [{name : $("#cluster_selector option:selected").val()}];
@@ -383,6 +403,8 @@ function CreateGraphTitle(params){
 
 function ShowGraph(canvas, params, title_text){
 
+	params = UpdateGraphParams(params);
+
 	return $.ajax({
 		url: "api.php",
 		method: "GET",
@@ -395,8 +417,8 @@ function ShowGraph(canvas, params, title_text){
 				case 'line':
 					myLineGraph(data, title_text, canvas)
 					break;
-				case 'pie':
-					myPieGraph(data, title_text, canvas)
+				case 'doughnut':
+					myDoughnutGraph(data, title_text, canvas)
 					break;
 			}
 		},
@@ -467,40 +489,31 @@ function createVariableSelector(graph, wrapper_div){
 }
 
 $("select").change(function(e){
-	var wrapper_id = $(e.target).closest('.chart-container').attr('id');
+	var wrapper = $(e.target).closest('.chart-container');
+	var wrapper_id = wrapper.attr('id');
 	var canvas = $(e.target).closest('.chart-container').children("canvas");
 
 	window[wrapper_id].params[e.target.name] = e.target.value;
+
+	createVariableSelector(window[wrapper_id].params['graph'], wrapper);
 
 	ShowGraph(canvas, window[wrapper_id].params, CreateGraphTitle(window[wrapper_id].params));
 });
 
 $("input").change(function(e){
-	var wrapper_id = $(e.target).closest('.chart-container').attr('id');
+	var wrapper = $(e.target).closest('.chart-container');
+	var wrapper_id = wrapper.attr('id');
 	var canvas = $(e.target).closest('.chart-container').children("canvas");
 
 	window[wrapper_id].params[e.target.name] = e.target.value;
 
+	createVariableSelector(window[wrapper_id].params['graph'], wrapper);
+
 	ShowGraph(canvas, window[wrapper_id].params, CreateGraphTitle(window[wrapper_id].params));
 });
 
-$(document).on('change',"select#graph_selector",function(){
+/*$(document).on('change',"select#graph_selector",function(){
 	$.when(createVariableSelector()).done(function(a1){
 		ShowGraph();
 	});
-});
-$(document).on('change',"select#occupancy_selector",function(){
-	ShowGraph();
-});
-$(document).on('change',"select#cluster_selector",function(){
-	ShowGraph();
-});
-$(document).on('change',"select#value_type_selector",function(){
-	ShowGraph();
-});
-$(document).on('change',"#datapoint_checkbox",function(){
-	ShowGraph();
-});
-$(document).on('click',"button#reset_chart",function(){
-	ShowGraph();
-});
+});*/

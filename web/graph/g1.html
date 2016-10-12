@@ -65,6 +65,16 @@
 				<div class="chart-container" style="width: 100%; height: auto; border-width: 0;" id="chart_1">
 					<form class="form-inline form-inline-force">
 						<div class="form-group">
+							<select class="form-control" name="graph">
+								<option value="ClustersOccupancy">Clusters</option>
+								<option value="ClustersWeekdayOccupancy">Clusters Weekdays</option>
+								<option value="ClustersHoursOccupancy">Clusters Hours</option>
+								<option value="FilesystemOccupancy">Filesystem</option>
+								<option value="QueuesOccupancy">Queues</option>
+								<option value="NodeDetails">Nodes</option>
+							</select>
+						</div>
+						<div class="form-group">
 							<select class="form-control variable-selector" name="occupancy">
 								<option value="avail">Available</option>
 							</select>
@@ -106,7 +116,7 @@ $(document).ready(function(){
 
 		graphType	 : 'line'
 	};
-
+	
 	createVariableSelector('ClustersOccupancy', '#chart_1')
 
 	setTimeout (function() {
