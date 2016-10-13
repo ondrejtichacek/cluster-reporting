@@ -55,7 +55,7 @@ Temporary Items
 *.ini
 *.history
 
-secret.*
+secret.php
 .remote-sync.json
 
 __pycache__
