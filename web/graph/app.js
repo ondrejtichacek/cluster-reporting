@@ -487,16 +487,10 @@ $("input").change(function(e){
 			});
 
 			window[canvas_id].chart.update();
-			
+
 			break;
 		default:
 			createVariableSelector(window[wrapper_id].params['graph'], wrapper);
 			ShowGraph(canvas, window[wrapper_id].params, CreateGraphTitle(window[wrapper_id].params));
 	}
 });
-
-/*$(document).on('change',"select#graph_selector",function(){
-	$.when(createVariableSelector()).done(function(a1){
-		ShowGraph();
-	});
-});*/
