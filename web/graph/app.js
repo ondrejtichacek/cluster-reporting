@@ -108,12 +108,12 @@ function myLineGraph(data, title_text, canvas_id) {
 				}]
 			},
 			pan: {
-				enabled: true,
+				enabled: false,
 				mode: 'x'
 			},
 			zoom: {
 				enabled: true,
-				//drag: true,
+				drag: true,
 				mode: 'x',
 		}
 	}
@@ -134,7 +134,6 @@ function myLineGraph(data, title_text, canvas_id) {
 		//dataset.steppedLine = true;
 		dataset.lineTension = 0;
 
-		// if ($("#datapoint_checkbox").is(':checked')){
 		if ($(canvas_id).parent().find(".datapoint-checkbox").is(':checked')){
 			dataset.pointRadius = 2;
 
@@ -201,19 +200,6 @@ function myBarGraph(data, title_text, canvas_id) {
 		dataset.borderColor = hexToRgba(hex,1);
 
 		dataset.backgroundColor = hexToRgba(hex,0.3);
-		//dataset.fill = false;
-
-		//dataset.steppedLine = true;
-		//dataset.pointRadius = 1;
-
-		//dataset.pointStyle = 'rect';
-
-		//dataset.pointBorderColor = hexToRgba(hex,1);
-		//dataset.pointBackgroundColor = hexToRgba(hex,1);
-		//dataset.pointBorderWidth = 1;
-
-		//dataset.pointHoverBackgroundColor = hexToRgba(hex,1);
-		//dataset.pointHoverBorderColor = 'black';
 	});
 
 	var ctx = $(canvas_id);
@@ -270,13 +256,6 @@ function myDoughnutGraph(data, title_text, canvas_id) {
 						opacity: 1,
 					});
 				}
-				/*enabled: false,*/
-				/*tooltipFontSize: 10,
-				tooltipTemplate: "<%if (label){%><%=label%>: <%}%><%= value %>hrs",
-				percentageInnerCutout : 70*/
-				/*mode: 'label',
-				callbacks: {
-				}*/
 			},
 			hover: {
 				mode: 'label'
@@ -300,7 +279,6 @@ function myDoughnutGraph(data, title_text, canvas_id) {
 		hex = SeqColormap(dataset.i, dataset.len, dataset.cluster)
 
 		dataset.borderWidth = 1;
-		//dataset.borderDash = [20,10];
 		dataset.borderColor = hexToRgba(hex,1);
 
 		var hexArray = [];
@@ -309,19 +287,6 @@ function myDoughnutGraph(data, title_text, canvas_id) {
 		});
 
 		dataset.backgroundColor = hexArray;
-		//dataset.fill = false;
-
-		//dataset.steppedLine = true;
-		//dataset.pointRadius = 1;
-
-		//dataset.pointStyle = 'rect';
-
-		//dataset.pointBorderColor = hexToRgba(hex,1);
-		//dataset.pointBackgroundColor = hexToRgba(hex,1);
-		//dataset.pointBorderWidth = 1;
-
-		//dataset.pointHoverBackgroundColor = hexToRgba(hex,1);
-		//dataset.pointHoverBorderColor = 'black';
 	});
 
 	var ctx = $(canvas_id);
@@ -504,12 +469,30 @@ $("input").change(function(e){
 	var wrapper = $(e.target).closest('.chart-container');
 	var wrapper_id = wrapper.attr('id');
 	var canvas = $(e.target).closest('.chart-container').children("canvas");
+	var canvas_id = canvas.attr('id');
 
 	window[wrapper_id].params[e.target.name] = e.target.value;
 
-	createVariableSelector(window[wrapper_id].params['graph'], wrapper);
+	switch (e.target.name) {
+		case "datapoints":
+			$.each(window[canvas_id].chart.data.datasets, function(key, dataset){
+				if (e.target.checked){
+					var hex = SeqColormap(dataset.i, dataset.len, dataset.cluster);
+					dataset.pointRadius = 2;
+					dataset.pointBorderColor = hexToRgba(hex,1);
+					dataset.pointBorderWidth = 1;
+				} else {
+					dataset.pointRadius = 0;
+				}
+			});
 
-	ShowGraph(canvas, window[wrapper_id].params, CreateGraphTitle(window[wrapper_id].params));
+			window[canvas_id].chart.update();
+			
+			break;
+		default:
+			createVariableSelector(window[wrapper_id].params['graph'], wrapper);
+			ShowGraph(canvas, window[wrapper_id].params, CreateGraphTitle(window[wrapper_id].params));
+	}
 });
 
 /*$(document).on('change',"select#graph_selector",function(){
