@@ -70,13 +70,10 @@ function myColormap(i,n) {
 	return hex;
 }
 
-function destroyGraphs(canvas_id) {
-	$.each(['myLine', 'myBar'], function(i, chartType){
-		try {
-			window[$(canvas_id).attr('id')].chart.destroy();
-		} catch (e) {
-		}
-	});
+function destroyGraphs(canvas) {
+	if (window[$(canvas).attr('id')].chart){
+		window[$(canvas).attr('id')].chart.destroy();
+	}
 }
 
 function myLineGraph(data, title_text, canvas_id) {
