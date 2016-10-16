@@ -1,5 +1,7 @@
 # cluster-reporting
-Push cluster statistics to web server and display them in DokuWiki.
+Push SGE cluster statistics to web server and visualize them as Chart.js graphs and DokuWiki tables.
+
+![screenshot](https://cloud.githubusercontent.com/assets/8862529/19417108/37ca4b56-93a4-11e6-91f7-5171de80e756.png)
 
 ## Usage
  * Copy contents of the ``cluster`` folder to your cluster.
