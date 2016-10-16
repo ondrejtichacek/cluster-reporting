@@ -453,19 +453,7 @@ function createVariableSelector(graph, wrapper_div){
 	});
 }
 
-$("select").change(function(e){
-	var wrapper = $(e.target).closest('.chart-container');
-	var wrapper_id = wrapper.attr('id');
-	var canvas = $(e.target).closest('.chart-container').children("canvas");
-
-	window[wrapper_id].params[e.target.name] = e.target.value;
-
-	createVariableSelector(window[wrapper_id].params['graph'], wrapper);
-
-	ShowGraph(canvas, window[wrapper_id].params, CreateGraphTitle(window[wrapper_id].params));
-});
-
-$("input").change(function(e){
+function handleFormEvent(e){
 	var wrapper = $(e.target).closest('.chart-container');
 	var wrapper_id = wrapper.attr('id');
 	var canvas = $(e.target).closest('.chart-container').children("canvas");
@@ -489,8 +477,23 @@ $("input").change(function(e){
 			window[canvas_id].chart.update();
 
 			break;
+
+		case "resetzoom":
+			window[canvas_id].chart.resetZoom();
+			break;
+
+		case "graph":
+		case "occupancy":
 		default:
 			createVariableSelector(window[wrapper_id].params['graph'], wrapper);
 			ShowGraph(canvas, window[wrapper_id].params, CreateGraphTitle(window[wrapper_id].params));
 	}
+}
+
+$("button").click(function(e){
+	handleFormEvent(e);
+});
+
+$("input, select").change(function(e){
+	handleFormEvent(e);
 });
