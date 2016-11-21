@@ -31,10 +31,8 @@ def read_config(section, filename='config.ini'):
 
 def cq_select(record):
     query = """SELECT avail, total, recorded
-                FROM cq
-                WHERE system = "{cluster}"
-                ORDER BY recorded DESC
-                LIMIT 1;""".format(**record)
+                FROM cq_most_recent
+                WHERE system = "{cluster}";""".format(**record)
 
     try:
         db_config = read_config(section='mysql')
@@ -64,10 +62,8 @@ def cq_select(record):
 
 def cfs_select(record):
     query = """SELECT avail, used, recorded
-                FROM cfs
-                WHERE system = "{cluster}"
-                ORDER BY recorded DESC
-                LIMIT 1;""".format(**record)
+                FROM cfs_most_recent
+                WHERE system = "{cluster}";""".format(**record)
 
     try:
         db_config = read_config(section='mysql')

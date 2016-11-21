@@ -9,6 +9,24 @@ FROM fs_occupancy a
         ON b.cluster_id = c.id
 );
 
+DROP VIEW IF EXISTS fs_most_recent;
+CREATE VIEW fs_most_recent(system, system_name, path, mounted, size, used, avail, recorded)
+AS (
+SELECT c.name, c.display_name, b.path, b.mounted, b.size, a.used, a.avail, a.recorded
+FROM fs_occupancy a
+    INNER JOIN (
+        SELECT filesystem_id, MAX(recorded) AS last_recorded
+        FROM fs_occupancy
+        GROUP BY filesystem_id
+    ) r
+    ON a.recorded = r.last_recorded
+    AND a.filesystem_id = r.filesystem_id
+    INNER JOIN filesystem b
+        ON a.filesystem_id = b.id
+    INNER JOIN cluster c
+        ON b.cluster_id = c.id
+);
+
 DROP VIEW IF EXISTS q;
 CREATE VIEW q(system, system_name,
                queue, queue_name, cpu, ram, scratch, gpu,
@@ -18,6 +36,28 @@ SELECT c.name, c.display_name,
        b.name, b.display_name, b.cpu, b.ram, b.scratch, b.gpu,
        a.cqload, a.used, a.used / a.total, a.res, a.avail, a.total, a.aoacds, a.cdsue, a.recorded
 FROM q_occupancy a
+    INNER JOIN queue b
+        ON a.queue_id = b.id
+    INNER JOIN cluster c
+        ON b.cluster_id = c.id
+);
+
+DROP VIEW IF EXISTS q_most_recent;
+CREATE VIEW q_most_recent(system, system_name,
+               queue, queue_name, cpu, ram, scratch, gpu,
+              cqload, used, used_p, res, avail, total, aoacds, cdsue, recorded)
+AS (
+SELECT c.name, c.display_name,
+       b.name, b.display_name, b.cpu, b.ram, b.scratch, b.gpu,
+       a.cqload, a.used, a.used / a.total, a.res, a.avail, a.total, a.aoacds, a.cdsue, a.recorded
+FROM q_occupancy a
+    INNER JOIN (
+        SELECT queue_id, MAX(recorded) AS last_recorded
+        FROM q_occupancy
+        GROUP BY queue_id
+    ) r
+    ON a.recorded = r.last_recorded
+    AND a.queue_id = r.queue_id
     INNER JOIN queue b
         ON a.queue_id = b.id
     INNER JOIN cluster c
@@ -43,6 +83,27 @@ SELECT fs.system, fs.system_name,
         fs.recorded
 FROM fs
     GROUP BY fs.recorded,fs.system
+);
+
+DROP VIEW IF EXISTS cq_most_recent;
+CREATE VIEW cq_most_recent(system, system_name, used, res, avail, total, aoacds, cdsue, recorded)
+AS (
+SELECT system, system_name,
+       SUM(used), SUM(res), SUM(avail),
+       SUM(total), SUM(aoacds), SUM(cdsue),
+        recorded
+FROM q_most_recent
+    GROUP BY system, recorded
+);
+
+DROP VIEW IF EXISTS cfs_most_recent;
+CREATE VIEW cfs_most_recent(system, system_name, size, used, avail, recorded)
+AS (
+SELECT system, system_name,
+       SUM(size), SUM(used), SUM(avail),
+        recorded
+FROM fs_most_recent
+    GROUP BY system, recorded
 );
 
 DROP VIEW IF EXISTS c;
