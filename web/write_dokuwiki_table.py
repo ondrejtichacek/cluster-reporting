@@ -8,6 +8,9 @@ from configparser import ConfigParser
 
 from mysql.connector import MySQLConnection, Error
 
+lighgreen = ["#A6FFD0", "#C5FFED", "#E4FFFF"]
+lightpink = ["#FFB4EB", "#FFD2FF", "#FFF0FF"]
+
 def read_config(section, filename='config.ini'):
     """ Read configuration file and return a dictionary object
     :param filename: name of the configuration file
@@ -94,17 +97,17 @@ def cfs_select(record):
 def format_data_row(res):
 
     if res['fs_avail_perc'] >= 40:
-        res['fs_color'] = "@lightgreen:"
+        res['fs_color'] = "@" + lightgreen[1] + ":"
     elif res['fs_avail_perc'] <= 20:
-        res['fs_color'] = "@pink:"
+        res['fs_color'] = "@" + lightpink[1] + ":"
     else:
         res['fs_color'] = ""
 
 
     if res['c_avail_perc'] >= 20:
-        res['c_color'] = "@lightgreen:"
+        res['c_color'] = "@" + lightgreen[1] + ":"
     elif res['c_avail_perc'] <= 10:
-        res['c_color'] = "@pink:"
+        res['c_color'] = "@" + lightpink[1] + ":"
     else:
         res['c_color'] = ""
 
