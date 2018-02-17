@@ -8,7 +8,7 @@ from configparser import ConfigParser
 
 from mysql.connector import MySQLConnection, Error
 
-lighgreen = ["#A6FFD0", "#C5FFED", "#E4FFFF"]
+lightgreen = ["#A6FFD0", "#C5FFED", "#E4FFFF"]
 lightpink = ["#FFB4EB", "#FFD2FF", "#FFF0FF"]
 
 def read_config(section, filename='config.ini'):
