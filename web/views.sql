@@ -161,6 +161,20 @@ ON cq.system = cfs.system AND cq.recorded = cfs.recorded
     GROUP BY cq.recorded,cq.system
 );
 
+DROP VIEW IF EXISTS c_recent;
+CREATE VIEW c_recent(system, system_name, q_used, q_res, q_avail, q_total, q_aoacds, q_cdsue, fs_size, fs_used, fs_avail, recorded)
+AS (
+SELECT cq.system, cq.system_name,
+       cq.used, cq.res, cq.avail,
+       cq.total, cq.aoacds, cq.cdsue,
+       cfs.size, cfs.used, cfs.avail,
+        cq.recorded
+FROM cq
+INNER JOIN cfs
+ON cq.system = cfs.system AND cq.recorded >= DATE_SUB(cfs.recorded, INTERVAL 7 DAY)
+    GROUP BY cq.recorded,cq.system
+);
+
 DROP VIEW IF EXISTS queue_details;
 CREATE VIEW queue_details(system, system_name,
                           name, display_name, cpu, ram, scratch, gpu)
