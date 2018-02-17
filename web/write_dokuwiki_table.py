@@ -96,18 +96,34 @@ def cfs_select(record):
 
 def format_data_row(res):
 
-    if res['fs_avail_perc'] >= 40:
+    if res['fs_avail_perc'] >= 80:
+        res['fs_color'] = "@" + lightgreen[0] + ":"
+    elif res['fs_avail_perc'] >= 60:
         res['fs_color'] = "@" + lightgreen[1] + ":"
+    elif res['fs_avail_perc'] >= 40:
+        res['fs_color'] = "@" + lightgreen[2] + ":"
+    elif res['fs_avail_perc'] <= 10:
+        res['fs_color'] = "@" + lightpink[0] + ":"
     elif res['fs_avail_perc'] <= 20:
         res['fs_color'] = "@" + lightpink[1] + ":"
+    elif res['fs_avail_perc'] <= 30:
+        res['fs_color'] = "@" + lightpink[2] + ":"
     else:
         res['fs_color'] = ""
 
 
-    if res['c_avail_perc'] >= 20:
+    if res['c_avail_perc'] >= 75:
+        res['c_color'] = "@" + lightgreen[0] + ":"
+    elif res['c_avail_perc'] >= 50:
         res['c_color'] = "@" + lightgreen[1] + ":"
+    elif res['c_avail_perc'] >= 25:
+        res['c_color'] = "@" + lightgreen[2] + ":"
+    elif res['c_avail_perc'] <= 5:
+        res['c_color'] = "@" + lightpink[0] + ":"
     elif res['c_avail_perc'] <= 10:
         res['c_color'] = "@" + lightpink[1] + ":"
+    elif res['c_avail_perc'] <= 15:
+        res['c_color'] = "@" + lightpink[2] + ":"
     else:
         res['c_color'] = ""
 
