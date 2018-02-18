@@ -111,8 +111,8 @@ function returnClusters($param, $mysqli) {
 
 		$query = sprintf(
 			"SELECT %s AS occupancy, recorded
-				FROM c
-				WHERE system = '%s' AND recorded >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+				FROM c_recent
+				WHERE system = '%s'
 				ORDER BY recorded",
 					$occupancyval,
 					$cluster['name']);
@@ -244,8 +244,8 @@ function returnQueues($param, $mysqli) {
 
 			$query = sprintf(
 				"SELECT %s AS occupancy, recorded
-					FROM q
-					WHERE system = '%s' AND queue = '%s' AND recorded >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+					FROM q_recent
+					WHERE system = '%s' AND queue = '%s'
 					ORDER BY recorded",
 						$occupancyval,
 						$cluster['name'],
