@@ -116,6 +116,17 @@ FROM q
     GROUP BY q.recorded,q.system
 );
 
+DROP VIEW IF EXISTS cq_recent;
+CREATE VIEW cq_recent(system, system_name, used, res, avail, total, aoacds, cdsue, recorded)
+AS (
+SELECT a.system, a.system_name,
+       SUM(a.used), SUM(a.res), SUM(a.avail),
+       SUM(a.total), SUM(a.aoacds), SUM(a.cdsue),
+        a.recorded
+FROM q_recent AS a
+    GROUP BY a.recorded,a.system
+);
+
 DROP VIEW IF EXISTS cfs;
 CREATE VIEW cfs(system, system_name, size, used, avail, recorded)
 AS (
@@ -124,6 +135,16 @@ SELECT fs.system, fs.system_name,
         fs.recorded
 FROM fs
     GROUP BY fs.recorded,fs.system
+);
+
+DROP VIEW IF EXISTS cfs_recent;
+CREATE VIEW cfs_recent(system, system_name, size, used, avail, recorded)
+AS (
+SELECT a.system, a.system_name,
+       SUM(a.size), SUM(a.used), SUM(a.avail),
+        a.recorded
+FROM fs as a
+    GROUP BY a.recorded,a.system
 );
 
 DROP VIEW IF EXISTS cq_most_recent;
@@ -164,15 +185,15 @@ ON cq.system = cfs.system AND cq.recorded = cfs.recorded
 DROP VIEW IF EXISTS c_recent;
 CREATE VIEW c_recent(system, system_name, q_used, q_res, q_avail, q_total, q_aoacds, q_cdsue, fs_size, fs_used, fs_avail, recorded)
 AS (
-SELECT cq.system, cq.system_name,
-       cq.used, cq.res, cq.avail,
-       cq.total, cq.aoacds, cq.cdsue,
-       cfs.size, cfs.used, cfs.avail,
-        cq.recorded
-FROM cq
-INNER JOIN cfs
-ON cq.system = cfs.system AND cq.recorded >= DATE_SUB(cfs.recorded, INTERVAL 7 DAY)
-    GROUP BY cq.recorded,cq.system
+SELECT a.system, a.system_name,
+       a.used, a.res, a.avail,
+       a.total, a.aoacds, a.cdsue,
+       b.size, b.used, b.avail,
+        a.recorded
+FROM cq_recent AS a
+INNER JOIN cfs AS b
+ON a.system = b.system AND a.recorded = b.recorded
+    GROUP BY a.recorded,a.system
 );
 
 DROP VIEW IF EXISTS queue_details;
