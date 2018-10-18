@@ -70,15 +70,9 @@ SELECT c.name, c.display_name,
        b.name, b.display_name, b.cpu, b.ram, b.scratch, b.gpu,
        a.cqload, a.used, a.used / a.total, a.res, a.avail, a.total, a.aoacds, a.cdsue, a.recorded
 FROM q_occupancy a
-    INNER JOIN (
-        SELECT queue_id, MAX(recorded) AS last_recorded
-        FROM q_occupancy
-        GROUP BY queue_id
-    ) r
-    ON a.recorded >= DATE_SUB(r.last_recorded, INTERVAL 7 DAY)
-    AND a.queue_id = r.queue_id
     INNER JOIN queue b
-        ON a.queue_id = b.id
+        ON a.recorded >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+        AND a.queue_id = b.id
     INNER JOIN cluster c
         ON b.cluster_id = c.id
 );
