@@ -137,7 +137,7 @@ AS (
 SELECT a.system, a.system_name,
        SUM(a.size), SUM(a.used), SUM(a.avail),
         a.recorded
-FROM fs as a
+FROM fs_recent as a
     GROUP BY a.recorded,a.system
 );
 
@@ -185,7 +185,7 @@ SELECT a.system, a.system_name,
        b.size, b.used, b.avail,
         a.recorded
 FROM cq_recent AS a
-INNER JOIN cfs AS b
+INNER JOIN cfs_recent AS b
 ON a.system = b.system AND a.recorded = b.recorded
     GROUP BY a.recorded,a.system
 );
