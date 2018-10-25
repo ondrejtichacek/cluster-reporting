@@ -59,6 +59,7 @@ FROM q_occupancy a
         ON a.queue_id = b.id
     INNER JOIN cluster c
         ON b.cluster_id = c.id
+WHERE b.deprecated = 0
 );
 
 DROP VIEW IF EXISTS q_recent;
