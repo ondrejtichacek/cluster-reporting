@@ -6,6 +6,7 @@ import time
 
 from configparser import ConfigParser
 
+import mysql.connector
 from mysql.connector import MySQLConnection, Error
 
 lightgreen = ["#A6FFD0", "#C5FFED", "#E4FFFF"]
@@ -39,9 +40,10 @@ def cq_select(record):
 
     try:
         db_config = read_config(section='mysql')
-        conn = MySQLConnection(**db_config)
+        conn = mysql.connector.connect(**db_config)
+        #conn = MySQLConnection(**db_config)
 
-        cursor = conn.cursor()
+        cursor = conn.cursor(buffered=True)
         cursor.execute(query)
 
         for (avail, total, recorded) in cursor:
@@ -72,7 +74,7 @@ def cfs_select(record):
         db_config = read_config(section='mysql')
         conn = MySQLConnection(**db_config)
 
-        cursor = conn.cursor()
+        cursor = conn.cursor(buffered=True)
         cursor.execute(query)
 
         for (avail, used, recorded) in cursor:
@@ -133,27 +135,46 @@ def format_data_row(res):
                 {fs_color} {fs_avail} GB / {fs_total} GB ({fs_avail_perc} %) \
                     <abbr title='Updated #{fs_recorded}'>\u25F7</abbr>| \
                     """.format(**res)
-    return re.sub(r'\s+', " ", row)
+
+    res['font_size'] = '<fs small>'
+    res['font_size_end'] = '</fs>'
+
+    row_min = """^{font_size} [[computing:{cluster}|{cluster_min}]] {font_size_end} \
+                    <fs x-small><abbr>?[Updated {c_recorded}, {fs_recorded}]</abbr> {font_size_end}| \
+                {c_color} {font_size}{c_avail} ({c_avail_perc} %) {font_size_end}| \
+                {fs_color} {font_size}{fs_avail} GB ({fs_avail_perc} %) {font_size_end}| \
+                    """.format(**res)
+
+    return re.sub(r'\s+', " ", row), re.sub(r'\s+', " ", row_min)
 
 def main():
 
     clusters = read_config(section='clusters')['names'].split(',')
     clusters = map(str.strip, clusters) # strip whitespace
 
+    clusters_min = read_config(section='clusters')['names_min'].split(',')
+    clusters_min = map(str.strip, clusters_min) # strip whitespace
+
     out = "|            ^ available cores  ^ free space  ^\n"
-    for cluster in clusters:
-        record = {'cluster': cluster}
+    out_min = "| ^ <fs small>cores</fs>  ^ <fs small>space</fs>  ^\n"
+    for cluster, cluster_min in zip(clusters, clusters_min):
+        record = {'cluster': cluster, 'cluster_min': cluster_min}
 
         c = cq_select(record)
         fs = cfs_select(record)
 
-        r = format_data_row({**record, **c, **fs})
+        r, r_min = format_data_row({**record, **c, **fs})
         out += r + "\n"
+        out_min += r_min + "\n"
 
     dokuwiki_config = read_config(section='dokuwiki')
 
     f = open(dokuwiki_config['path'] + '/data/pages/stats/summary.txt', 'w')
     f.write(out)
+    f.close()
+
+    f = open(dokuwiki_config['path'] + '/data/pages/stats/summary-min.txt', 'w')
+    f.write(out_min)
     f.close()
 
 
