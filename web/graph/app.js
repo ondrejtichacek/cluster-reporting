@@ -101,7 +101,13 @@ function myLineGraph(data, title_text, canvas_id) {
 			},
 			scales: {
 				xAxes: [{
-					type: 'time'
+					type: 'time',
+					time: {
+						unit: 'day',
+						displayFormats: {
+							day: 'MMM D'
+						}
+					}
 				}]
 			},
 			pan: {
@@ -121,7 +127,7 @@ function myLineGraph(data, title_text, canvas_id) {
 		//hex = myColormap(i, config.data.datasets.length);
 		hex = SeqColormap(dataset.i, dataset.len, dataset.cluster)
 
-		dataset.borderWidth = 1;
+		dataset.borderWidth = 2;
 		//dataset.borderDash = [20,10];
 		dataset.borderColor = hexToRgba(hex,1);
 

@@ -6,7 +6,8 @@
 	<body>
 		<div style="width: 100%;">
 			<div class="flexcontainer">
-				<div class="chart-container" style="width: 100%; height: auto; border-width: 0;" id="chart_1">
+				<div class="chart-container" style="width: 100%; height: auto; border-width: 0; background-color:#f6f8fa" id="chart_1">
+					<canvas id="canvas_1"></canvas>
 					<form class="form-inline form-inline-force">
 						<div class="form-group">
 							<select class="form-control" name="graph">
@@ -40,7 +41,6 @@
 							<button type="button" name="resetzoom" class="btn btn-default">Reset Zoom</button>
 						</div>
 					</form>
-					<canvas id="canvas_1"></canvas>
 				</div>
 			</div>
 		</div>

@@ -1,5 +1,6 @@
 <title>Cluster Reporting</title>
-<script src="node_modules/chart.js/dist/Chart.bundle.js"></script>
+<!--<script src="node_modules/chart.js/dist/Chart.bundle.js"></script>-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.bundle.min.js"></script>
 <script src="node_modules/hammerjs/hammer.js"></script>
 <script src="node_modules/Chart.Zoom.js/Chart.Zoom.js"></script>
 <script src="node_modules/chroma-js/chroma.min.js"></script>
@@ -37,6 +38,7 @@
 	}
 	.form-inline-force .form-group {
 		display: inline-block;
+		margin-top: 10px;
 		margin-bottom: 0;
 		vertical-align: middle;
 	}
